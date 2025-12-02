@@ -3,7 +3,6 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 // --- আপনার কনফিগারেশন ---
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDxkigmr_aFKfkcA40tYxkJ7uNFxtmg34s",
   authDomain: "smart-home-control-85131.firebaseapp.com",
@@ -11,9 +10,8 @@ const firebaseConfig = {
   projectId: "smart-home-control-85131",
   storageBucket: "smart-home-control-85131.firebasestorage.app",
   messagingSenderId: "1088125775954",
-  appId: "1:1088125775954:web:2017df9c7b290240966f8b"
+  appId: "1:1088125775954:web:743b9899cbcb7011966f8b"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
@@ -117,4 +115,5 @@ window.editName = function(labelKey, event) {
       });
   }
 };
+
 
