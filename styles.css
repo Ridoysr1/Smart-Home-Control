@@ -1,92 +1,94 @@
-/* --- Base CSS --- */
-body {
+/* Full Screen Setup */
+body, html {
     margin: 0; padding: 0;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    height: 100vh;
-    display: flex; justify-content: center; align-items: center;
-    font-family: "Segoe UI", sans-serif; color: white;
+    width: 100%; height: 100%;
+    overflow: hidden; /* No Scroll */
+    font-family: "Segoe UI", sans-serif;
+    background: #121212; color: white;
 }
-.card {
-    width: 380px; max-width: 92%; max-height: 90vh; overflow-y: auto;
-    padding: 25px; border-radius: 20px;
-    background: rgba(255,255,255,0.12); backdrop-filter: blur(14px);
-    box-shadow: 0 10px 45px rgba(0,0,0,0.25); text-align: center;
-}
-h1 { margin-bottom: 5px; font-size: 24px; }
-.status-badge { display: inline-block; padding: 5px 12px; border-radius: 50px; font-size: 11px; margin-bottom: 15px; font-weight: 600; }
-.online { background: #00e676; color: #000; }
-.offline { background: #ff1744; color: #fff; }
 
+.full-screen {
+    width: 100%; height: 100%;
+    background: linear-gradient(180deg, #1e1e2e 0%, #0f0f1a 100%);
+    display: flex; flex-direction: column;
+    padding: 20px; box-sizing: border-box;
+}
+
+/* Header */
+.app-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+}
+.app-header h1 { margin: 0; font-size: 24px; font-weight: 300; letter-spacing: 1px; }
+
+.status-dot { width: 10px; height: 10px; border-radius: 50%; }
+.online { background: #00e676; box-shadow: 0 0 10px #00e676; }
+.offline { background: #ff1744; }
+
+/* Center Auth Box */
+.center-box {
+    margin: auto; width: 100%; max-width: 320px; text-align: center;
+}
 input, select {
-    width: 90%; padding: 12px; margin: 8px 0; border-radius: 10px;
-    border: none; outline: none; background: rgba(255,255,255,0.15);
-    color: white; text-align: center; font-family: inherit;
+    width: 100%; padding: 15px; margin: 8px 0; border-radius: 12px;
+    border: none; background: #2a2a35; color: white; font-size: 16px;
+    box-sizing: border-box; outline: none;
 }
-option { background: #333; color: white; }
-
 .btn {
-    width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px;
-    border: none; cursor: pointer; color: white; font-weight: 600;
-    background: linear-gradient(135deg, #03a9f4, #0277bd);
+    width: 100%; padding: 15px; border-radius: 12px; border: none;
+    font-size: 16px; font-weight: bold; cursor: pointer;
+    background: #4e54c8; color: white; margin-top: 10px;
 }
-.logout-btn { background: linear-gradient(135deg, #ff5252, #d32f2f); margin-top: 15px; }
 
-/* Grid */
-.button-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 10px; }
+/* 6 Button Grid */
+#controlBox { flex-grow: 1; display: flex; flex-direction: column; }
+.button-grid {
+    display: grid; 
+    grid-template-columns: 1fr 1fr; /* 2 Columns */
+    gap: 15px; 
+    flex-grow: 1; 
+    align-content: start;
+}
 
 .gpio-button {
-    width: 100%; padding: 15px 10px; border-radius: 12px;
-    background: linear-gradient(135deg, #2a3b55, #1e2a3d);
-    border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
-    color: white; display: flex; flex-direction: column; 
-    align-items: center; gap: 6px; transition: 0.3s;
-    
-    /* লং প্রেসের জন্য জরুরি: টেক্সট সিলেক্ট বন্ধ করা */
-    user-select: none;
-    -webkit-user-select: none; /* Safari/Chrome */
-    -webkit-touch-callout: none; /* iOS */
+    background: #2a2a35; border-radius: 16px; border: none;
+    color: white; padding: 20px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; transition: 0.2s;
+    user-select: none; -webkit-user-select: none;
 }
+.gpio-button:active { transform: scale(0.95); }
+.gpio-button.on { background: #4e54c8; box-shadow: 0 5px 15px rgba(78, 84, 200, 0.4); }
 
-.gpio-button:active { transform: scale(0.96); } /* চাপ দিলে একটু ছোট হবে */
+.icon-lg { font-size: 24px; margin-bottom: 5px; opacity: 0.7; }
+.gpio-button.on .icon-lg { opacity: 1; }
+.device-name { font-size: 14px; font-weight: 500; }
+.status { font-size: 10px; opacity: 0.5; letter-spacing: 1px; }
 
-.gpio-button.on { background: linear-gradient(135deg, #00c853, #69f0ae); color: #003300; border: none; }
-.btn-top { display: flex; justify-content: center; align-items: center; gap: 5px; width: 100%; }
-.device-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; font-size: 15px; }
-.status { font-size: 11px; opacity: 0.8; }
+/* Bottom Nav */
+.bottom-nav {
+    display: flex; gap: 10px; margin-top: 20px;
+}
+.nav-btn {
+    flex: 1; padding: 15px; border-radius: 12px; border: none;
+    background: #333; color: #aaa; cursor: pointer; font-size: 14px;
+}
+.nav-btn:hover { background: #444; color: white; }
+.logout { background: #3a1c1c; color: #ff8a80; }
 
-/* --- Schedule Styles --- */
-.nav-area { margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
-.nav-btn { background: linear-gradient(135deg, #667eea, #764ba2); }
-
-.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.back-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
-
-.add-schedule-form { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; text-align: left; }
-.add-schedule-form label { font-size: 12px; color: #aaa; margin-left: 5px; }
-.add-schedule-form select, .add-schedule-form input { width: 100%; box-sizing: border-box; margin-top: 5px; margin-bottom: 10px; text-align: left; padding-left: 10px; }
+/* Schedule Page */
+.header-row { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.back-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+.add-schedule-form { background: #2a2a35; padding: 15px; border-radius: 16px; }
 .row-inputs { display: flex; gap: 10px; }
-.half-box { width: 50%; }
-.add-btn { margin-top: 5px; background: linear-gradient(135deg, #00c853, #009624); }
+.half { width: 50%; }
+.add-btn { background: #00c853; }
 
-.divider { margin: 20px 0 10px 0; font-size: 14px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
-
+.schedule-list { margin-top: 20px; overflow-y: auto; max-height: 50vh; }
 .schedule-item {
-    background: rgba(255,255,255,0.1); border-radius: 10px;
-    padding: 12px; margin-bottom: 8px;
+    background: #2a2a35; padding: 15px; border-radius: 12px; margin-bottom: 10px;
     display: flex; justify-content: space-between; align-items: center;
-    border-left: 4px solid #03a9f4;
+    border-left: 4px solid #4e54c8;
 }
-.item-info { text-align: left; }
-.item-name { font-weight: bold; font-size: 15px; color: white; }
-.item-action { font-size: 13px; color: #ddd; margin-top: 2px; }
-.on-text { color: #69f0ae; font-weight: bold; }
-.off-text { color: #ff8a80; font-weight: bold; }
-
-.delete-btn {
-    background: rgba(255, 0, 0, 0.2); border: none; color: #ff8a80;
-    width: 30px; height: 30px; border-radius: 50%;
-    cursor: pointer; display: flex; justify-content: center; align-items: center;
-    transition: 0.2s;
-}
-.delete-btn:hover { background: rgba(255, 0, 0, 0.4); color: white; }
-.empty-msg { color: #aaa; font-style: italic; margin-top: 20px; }
+.on-text { color: #00e676; } .off-text { color: #ff1744; }
+.del-btn { background: none; border: none; color: #666; cursor: pointer; }
