@@ -27,11 +27,13 @@ const logoutBtn = document.getElementById("logoutBtn");
 const authMsg = document.getElementById("authMsg");
 const badge = document.getElementById("statusBadge");
 
-// ভেরিয়েবল নাম স্টোর করার জন্য
-let deviceNames = ["Switch 1", "Switch 2", "Switch 3", "Switch 4", "Switch 5"];
-let activeTimers = {}; // ডেটাবেসের টাইমার ভ্যালু এখানে জমা থাকবে
+// লং প্রেস ভেরিয়েবল
+let pressTimer;
+let isLongPress = false;
 
-// Login
+let deviceNames = ["Switch 1", "Switch 2", "Switch 3", "Switch 4", "Switch 5"];
+let activeTimers = {};
+
 loginBtn.onclick = async () => {
   authMsg.textContent = "Logging in...";
   try {
@@ -62,7 +64,7 @@ function startListeners() {
   for(let i=1; i<=5; i++) {
     const idx = i;
     
-    // ১. GPIO Status Listener
+    // Status Listener
     onValue(ref(db, "/gpio" + idx), (snap) => {
       const val = snap.val();
       const btn = document.getElementById("gpio" + idx + "Btn");
@@ -73,19 +75,19 @@ function startListeners() {
       }
     });
 
-    // ২. Labels (Names) Listener - ড্রপডাউন এবং বাটন আপডেট করার জন্য
+    // Label Listener
     onValue(ref(db, "/label" + idx), (snap) => {
       const name = snap.val();
       if(name) {
-          deviceNames[idx-1] = name; // অ্যারে আপডেট
+          deviceNames[idx-1] = name;
           const el = document.getElementById("name_gpio" + idx);
           if(el) el.textContent = name;
-          updateDropdown(); // ড্রপডাউনে নাম আপডেট
-          renderScheduleList(); // লিস্টেও নাম আপডেট হবে
+          updateDropdown();
+          renderScheduleList();
       }
     });
 
-    // ৩. Timers Listener (ডেটাবেস থেকে টাইমার রিড করা)
+    // Timer Listener
     onValue(ref(db, "/timeOn" + idx), (snap) => {
        activeTimers["timeOn" + idx] = snap.val();
        renderScheduleList();
@@ -96,67 +98,92 @@ function startListeners() {
     });
   }
 
-  // বাটন ক্লিক হ্যান্ডলার
+  // --- বাটন ইভেন্ট হ্যান্ডলার (ক্লিক ও লং প্রেস) ---
   document.querySelectorAll(".gpio-button").forEach((btn) => {
-    btn.onclick = () => {
-      const key = btn.dataset.gpio;
-      const newState = btn.classList.contains("on") ? 0 : 1;
-      set(ref(db, "/" + key), newState);
+    
+    // ১. ক্লিক লজিক (Toggle)
+    btn.onclick = (e) => {
+        // যদি লং প্রেস হয়ে থাকে, তবে টোগল হবে না
+        if(isLongPress) {
+            isLongPress = false; // রিসেট
+            return;
+        }
+        
+        // টোগল কোড
+        const key = btn.dataset.gpio;
+        const newState = btn.classList.contains("on") ? 0 : 1;
+        set(ref(db, "/" + key), newState);
     };
+
+    // ২. লং প্রেস লজিক
+    const handlePressStart = (e) => {
+        isLongPress = false; // শুরুতে ফলস
+        pressTimer = setTimeout(() => {
+            isLongPress = true; // ৮০০ms পর লং প্রেস ডিটেক্ট হবে
+            
+            // ভাইব্রেশন (মোবাইলে ফিডব্যাকের জন্য)
+            if(navigator.vibrate) navigator.vibrate(50);
+            
+            // নাম এডিট ফাংশন কল
+            const labelKey = btn.dataset.label; // html এ data-label="label1" থাকতে হবে
+            editName(labelKey);
+            
+        }, 800); // ৮০০ মিলিসেকেন্ড সময়
+    };
+
+    const handlePressEnd = (e) => {
+        clearTimeout(pressTimer); // ৮০০ms এর আগে হাত উঠালে টাইমার বাতিল
+    };
+
+    // ইভেন্ট লিসেনার যোগ করা (মাউস এবং টাচ দুটোর জন্য)
+    btn.addEventListener("mousedown", handlePressStart);
+    btn.addEventListener("touchstart", handlePressStart);
+
+    btn.addEventListener("mouseup", handlePressEnd);
+    btn.addEventListener("mouseleave", handlePressEnd);
+    btn.addEventListener("touchend", handlePressEnd);
+    btn.addEventListener("touchmove", handlePressEnd); // স্ক্রল করলে বাতিল
+    
+    // রাইট ক্লিক মেনু বন্ধ করা
+    btn.addEventListener("contextmenu", (e) => e.preventDefault());
   });
 }
 
-// সিলেক্ট ড্রপডাউন আপডেট করা (যাতে রিয়েল নাম দেখায়)
 function updateDropdown() {
     const select = document.getElementById("schedDeviceSelect");
     if(!select) return;
-    // বর্তমান সিলেকশন মনে রাখা
     const currentVal = select.value;
     select.innerHTML = "";
-    
     deviceNames.forEach((name, index) => {
         const option = document.createElement("option");
         option.value = index + 1;
         option.text = name;
         select.appendChild(option);
     });
-    // আগের সিলেকশন সেট করা
     select.value = currentVal;
 }
 
-// শিডিউল লিস্ট রেন্ডার করা (তৈরি করা)
 function renderScheduleList() {
     const container = document.getElementById("scheduleListContainer");
     if(!container) return;
     container.innerHTML = "";
-
     let hasTimer = false;
-
-    // ১ থেকে ৫ পর্যন্ত লুপ চালিয়ে চেক করা
     for(let i=1; i<=5; i++) {
-        // ON টাইমার আছে কিনা
         if(activeTimers["timeOn"+i] && activeTimers["timeOn"+i] !== "") {
             createListItem(container, i, "On", activeTimers["timeOn"+i]);
             hasTimer = true;
         }
-        // OFF টাইমার আছে কিনা
         if(activeTimers["timeOff"+i] && activeTimers["timeOff"+i] !== "") {
             createListItem(container, i, "Off", activeTimers["timeOff"+i]);
             hasTimer = true;
         }
     }
-
-    if(!hasTimer) {
-        container.innerHTML = '<div class="empty-msg">No active timers found.</div>';
-    }
+    if(!hasTimer) container.innerHTML = '<div class="empty-msg">No active timers set.</div>';
 }
 
-// লিস্ট আইটেম HTML তৈরি
 function createListItem(container, index, action, time) {
     const div = document.createElement("div");
     div.className = "schedule-item";
-    
-    // কালার স্টাইল
     const actionClass = action === "On" ? "on-text" : "off-text";
     const actionText = action.toUpperCase();
     const deviceName = deviceNames[index-1] || "Switch "+index;
@@ -175,38 +202,30 @@ function createListItem(container, index, action, time) {
 
 // --- GLOBAL FUNCTIONS ---
 
-// নাম এডিট
-window.editName = function(labelKey, event) {
-  event.stopPropagation(); 
-  let newName = prompt("Enter new name:");
-  if (newName && newName.trim() !== "") set(ref(db, "/" + labelKey), newName);
+// নাম এডিট ফাংশন (লং প্রেস করলে এটি কল হবে)
+window.editName = function(labelKey) {
+  let newName = prompt("Enter new name for this switch:");
+  if (newName && newName.trim() !== "") {
+      set(ref(db, "/" + labelKey), newName)
+      .then(() => console.log("Name updated"))
+      .catch((err) => alert("Error: " + err.message));
+  }
 };
 
-// নতুন সিডিউল যোগ করা
 window.addNewSchedule = function() {
     const devId = document.getElementById("schedDeviceSelect").value;
-    const action = document.getElementById("schedActionSelect").value; // On or Off
+    const action = document.getElementById("schedActionSelect").value;
     const time = document.getElementById("schedTimeInput").value;
-
-    if(!time) {
-        alert("Please select a time!");
-        return;
-    }
-
-    const dbKey = "/time" + action + devId; // Ex: /timeOn1 or /timeOff2
-    
+    if(!time) { alert("Please select a time!"); return; }
+    const dbKey = "/time" + action + devId;
     set(ref(db, dbKey), time)
-    .then(() => {
-        alert("Schedule Added!");
-        // ইনপুট রিসেট না করলেও চলে, ইউজার চাইলে করতে পারে
-    })
+    .then(() => alert("Schedule Added!"))
     .catch(err => alert("Error: " + err.message));
 };
 
-// টাইমার ডিলিট করা
-window.deleteTimer = function(index, action) { // action = 'On' or 'Off'
+window.deleteTimer = function(index, action) {
     const dbKey = "/time" + action + index;
-    if(confirm(`Delete auto ${action.toUpperCase()} for ${deviceNames[index-1]}?`)) {
-        set(ref(db, dbKey), ""); // খালি স্ট্রিং দিয়ে ডিলিট
+    if(confirm(`Remove timer?`)) {
+        set(ref(db, dbKey), "");
     }
 };
