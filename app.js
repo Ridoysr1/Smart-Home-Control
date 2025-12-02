@@ -34,10 +34,31 @@ document.getElementById("loginBtn").onclick = async () => {
     catch (e) { document.getElementById("authMsg").textContent = e.message; }
 };
 
-// Logout with Warning
 document.getElementById("logoutBtn").onclick = () => {
     if(confirm("Are you sure you want to Exit?")) {
         signOut(auth);
+    }
+};
+
+// --- NEW: Master Switch Logic ---
+document.getElementById("masterBtn").onclick = () => {
+    // Check if any light is currently ON
+    let anyOn = false;
+    for(let i=1; i<=6; i++) {
+        const btn = document.getElementById("gpio" + i + "Btn");
+        if(btn && btn.classList.contains("on")) {
+            anyOn = true;
+            break;
+        }
+    }
+    
+    // If any ON -> Turn All OFF (0)
+    // If all OFF -> Turn All ON (1)
+    const newState = anyOn ? 0 : 1;
+
+    // Send to Firebase
+    for(let i=1; i<=6; i++) {
+        set(ref(db, "/gpio" + i), newState);
     }
 };
 
@@ -100,7 +121,6 @@ function startListeners() {
     });
 }
 
-// Populate Digital Time Selectors
 function populateTimeSelects() {
     const h = document.getElementById("schedHour");
     const m = document.getElementById("schedMinute");
@@ -138,7 +158,6 @@ function addItem(c, i, act, time) {
 
 window.editName = (k) => { let n = prompt("Name:"); if(n) set(ref(db, "/"+k), n); };
 
-// New Add Schedule with Digital Time
 window.addNewSchedule = () => {
     let d = document.getElementById("schedDeviceSelect").value;
     let a = document.getElementById("schedActionSelect").value;
