@@ -2,18 +2,16 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// --- আপনার কনফিগারেশন এখানে দিন ---
-// Your web app's Firebase configuration
+// --- আপনার কনফিগারেশন ---
 const firebaseConfig = {
-  apiKey: "AIzaSyDxkigmr_aFKfkcA40tYxkJ7uNFxtmg34s",
-  authDomain: "smart-home-control-85131.firebaseapp.com",
-  databaseURL: "https://smart-home-control-85131-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "smart-home-control-85131",
-  storageBucket: "smart-home-control-85131.firebasestorage.app",
-  messagingSenderId: "1088125775954",
-  appId: "1:1088125775954:web:2017df9c7b290240966f8b"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
 };
-
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
@@ -26,7 +24,9 @@ const logoutBtn = document.getElementById("logoutBtn");
 const authMsg = document.getElementById("authMsg");
 const badge = document.getElementById("statusBadge");
 
+// লিসেনার লিস্ট
 const gpioKeys = ["gpio1", "gpio2", "gpio3", "gpio4", "gpio5"];
+const labelKeys = ["label1", "label2", "label3", "label4", "label5"];
 
 loginBtn.onclick = async () => {
   authMsg.textContent = "Logging in...";
@@ -56,12 +56,24 @@ onAuthStateChanged(auth, (user) => {
 });
 
 function startListeners() {
+  // ১. GPIO স্ট্যাটাস শোনা
   gpioKeys.forEach((key) => {
     onValue(ref(db, "/" + key), (snapshot) => {
       updateButtonVisuals(key, snapshot.val());
     });
   });
 
+  // ২. নামের পরিবর্তন শোনা (Label Listeners)
+  labelKeys.forEach((key, index) => {
+    onValue(ref(db, "/" + key), (snapshot) => {
+      const name = snapshot.val();
+      const gpioKey = "gpio" + (index + 1);
+      const nameSpan = document.getElementById("name_" + gpioKey);
+      if(nameSpan) nameSpan.textContent = name;
+    });
+  });
+
+  // ৩. বাটন ক্লিক হ্যান্ডলার (অন/অফ)
   document.querySelectorAll(".gpio-button").forEach((btn) => {
     btn.onclick = () => {
       const key = btn.dataset.gpio;
@@ -85,3 +97,22 @@ function updateButtonVisuals(key, value) {
     }
   }
 }
+
+// ৪. নাম এডিট করার ফাংশন (গ্লোবাল স্কোপে দেওয়া হয়েছে)
+window.editName = function(labelKey, event) {
+  // বাটন ক্লিকের কারণে যেন লাইট অন/অফ না হয়, তাই এটা থামানো হলো
+  event.stopPropagation(); 
+  
+  let newName = prompt("Enter new name:");
+  
+  if (newName && newName.trim() !== "") {
+    // ফায়ারবেসে নাম সেভ করা
+    set(ref(db, "/" + labelKey), newName)
+      .then(() => {
+        console.log("Name updated!");
+      })
+      .catch((error) => {
+        alert("Error saving name: " + error.message);
+      });
+  }
+};
