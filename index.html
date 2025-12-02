@@ -22,24 +22,28 @@
 
     <div id="controlBox" style="display:none;">
         <div class="button-grid">
-            <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1">
-                <div class="btn-top"><span id="name_gpio1" class="device-name">...</span><span class="edit-icon" onclick="editName('label1', event)">✎</span></div>
+            <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1" data-label="label1">
+                <div class="btn-top"><span id="name_gpio1" class="device-name">...</span></div>
                 <span class="status">OFF</span>
             </button>
-            <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2">
-                <div class="btn-top"><span id="name_gpio2" class="device-name">...</span><span class="edit-icon" onclick="editName('label2', event)">✎</span></div>
+
+            <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2" data-label="label2">
+                <div class="btn-top"><span id="name_gpio2" class="device-name">...</span></div>
                 <span class="status">OFF</span>
             </button>
-            <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3">
-                <div class="btn-top"><span id="name_gpio3" class="device-name">...</span><span class="edit-icon" onclick="editName('label3', event)">✎</span></div>
+
+            <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3" data-label="label3">
+                <div class="btn-top"><span id="name_gpio3" class="device-name">...</span></div>
                 <span class="status">OFF</span>
             </button>
-            <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4">
-                <div class="btn-top"><span id="name_gpio4" class="device-name">...</span><span class="edit-icon" onclick="editName('label4', event)">✎</span></div>
+
+            <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4" data-label="label4">
+                <div class="btn-top"><span id="name_gpio4" class="device-name">...</span></div>
                 <span class="status">OFF</span>
             </button>
-            <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5">
-                <div class="btn-top"><span id="name_gpio5" class="device-name">...</span><span class="edit-icon" onclick="editName('label5', event)">✎</span></div>
+
+            <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5" data-label="label5">
+                <div class="btn-top"><span id="name_gpio5" class="device-name">...</span></div>
                 <span class="status">OFF</span>
             </button>
         </div>
@@ -48,6 +52,8 @@
             <button onclick="showSchedulePage()" class="btn nav-btn"><i class="fas fa-clock"></i> Set Timer</button>
             <button id="logoutBtn" class="btn logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
+        
+        <p style="font-size: 11px; color: #aaa; margin-top: 15px;">Tip: Long press a button to rename.</p>
     </div>
 
     <div id="scheduleBox" style="display:none;">
