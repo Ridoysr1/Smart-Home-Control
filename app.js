@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// --- আপনার কনফিগারেশন ---
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDxkigmr_aFKfkcA40tYxkJ7uNFxtmg34s",
   authDomain: "smart-home-control-85131.firebaseapp.com",
@@ -12,28 +12,23 @@ const firebaseConfig = {
   messagingSenderId: "1088125775954",
   appId: "1:1088125775954:web:743b9899cbcb7011966f8b"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
 const authBox = document.getElementById("authBox");
 const controlBox = document.getElementById("controlBox");
+const scheduleBox = document.getElementById("scheduleBox");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const authMsg = document.getElementById("authMsg");
 const badge = document.getElementById("statusBadge");
 
-// লিসেনার লিস্ট
-const gpioKeys = ["gpio1", "gpio2", "gpio3", "gpio4", "gpio5"];
-const labelKeys = ["label1", "label2", "label3", "label4", "label5"];
-
 loginBtn.onclick = async () => {
   authMsg.textContent = "Logging in...";
   try {
-    await signInWithEmailAndPassword(auth, 
-      document.getElementById("emailField").value, 
-      document.getElementById("passwordField").value
-    );
+    await signInWithEmailAndPassword(auth, document.getElementById("emailField").value, document.getElementById("passwordField").value);
   } catch (e) { authMsg.textContent = e.message; }
 };
 
@@ -43,36 +38,54 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     authBox.style.display = "none";
     controlBox.style.display = "block";
+    scheduleBox.style.display = "none";
     badge.className = "status-badge online";
     badge.textContent = "System Online";
     startListeners();
   } else {
     authBox.style.display = "block";
     controlBox.style.display = "none";
+    scheduleBox.style.display = "none";
     badge.className = "status-badge offline";
     badge.textContent = "System Offline";
   }
 });
 
 function startListeners() {
-  // ১. GPIO স্ট্যাটাস শোনা
-  gpioKeys.forEach((key) => {
-    onValue(ref(db, "/" + key), (snapshot) => {
-      updateButtonVisuals(key, snapshot.val());
+  for(let i=1; i<=5; i++) {
+    // GPIO & Button
+    const key = "gpio" + i;
+    onValue(ref(db, "/" + key), (snap) => {
+      const val = snap.val();
+      const btn = document.getElementById(key + "Btn");
+      const txt = btn ? btn.querySelector(".status") : null;
+      if(btn) {
+        if(val === 1) { btn.classList.add("on"); if(txt) txt.textContent="ON"; }
+        else { btn.classList.remove("on"); if(txt) txt.textContent="OFF"; }
+      }
     });
-  });
 
-  // ২. নামের পরিবর্তন শোনা (Label Listeners)
-  labelKeys.forEach((key, index) => {
-    onValue(ref(db, "/" + key), (snapshot) => {
-      const name = snapshot.val();
-      const gpioKey = "gpio" + (index + 1);
-      const nameSpan = document.getElementById("name_" + gpioKey);
-      if(nameSpan) nameSpan.textContent = name;
+    // Label
+    const lblKey = "label" + i;
+    onValue(ref(db, "/" + lblKey), (snap) => {
+      const name = snap.val();
+      const el1 = document.getElementById("name_" + key);
+      const el2 = document.getElementById("sched_name_" + i);
+      if(el1) el1.textContent = name;
+      if(el2) el2.textContent = name;
     });
-  });
 
-  // ৩. বাটন ক্লিক হ্যান্ডলার (অন/অফ)
+    // Timers
+    onValue(ref(db, "/timeOn" + i), (snap) => {
+        const el = document.getElementById("timeOn" + i);
+        if(el) el.value = snap.val() || "";
+    });
+    onValue(ref(db, "/timeOff" + i), (snap) => {
+        const el = document.getElementById("timeOff" + i);
+        if(el) el.value = snap.val() || "";
+    });
+  }
+
   document.querySelectorAll(".gpio-button").forEach((btn) => {
     btn.onclick = () => {
       const key = btn.dataset.gpio;
@@ -82,38 +95,12 @@ function startListeners() {
   });
 }
 
-function updateButtonVisuals(key, value) {
-  const btn = document.getElementById(key + "Btn");
-  const statusText = btn ? btn.querySelector(".status") : null;
-  
-  if (btn) {
-    if (value === 1) {
-      btn.classList.add("on");
-      if (statusText) statusText.textContent = "ON";
-    } else {
-      btn.classList.remove("on");
-      if (statusText) statusText.textContent = "OFF";
-    }
-  }
-}
-
-// ৪. নাম এডিট করার ফাংশন (গ্লোবাল স্কোপে দেওয়া হয়েছে)
 window.editName = function(labelKey, event) {
-  // বাটন ক্লিকের কারণে যেন লাইট অন/অফ না হয়, তাই এটা থামানো হলো
   event.stopPropagation(); 
-  
   let newName = prompt("Enter new name:");
-  
-  if (newName && newName.trim() !== "") {
-    // ফায়ারবেসে নাম সেভ করা
-    set(ref(db, "/" + labelKey), newName)
-      .then(() => {
-        console.log("Name updated!");
-      })
-      .catch((error) => {
-        alert("Error saving name: " + error.message);
-      });
-  }
+  if (newName && newName.trim() !== "") set(ref(db, "/" + labelKey), newName);
 };
 
-
+window.setTimer = function(key, value) {
+    set(ref(db, "/" + key), value);
+};
