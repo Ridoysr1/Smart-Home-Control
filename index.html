@@ -92,15 +92,23 @@
                 <option value="5">Switch 5</option>
                 <option value="6">Switch 6</option>
             </select>
+
             <div class="row-inputs">
                 <div class="half">
                     <label>Action</label>
                     <select id="schedActionSelect"><option value="On">ON</option><option value="Off">OFF</option></select>
                 </div>
+                
                 <div class="half">
-                    <label>Time (HH:MM)</label>
+                    <label>Time (HH:MM AM/PM)</label>
                     <div class="digital-time-box">
-                        <select id="schedHour"></select><span class="colon">:</span><select id="schedMinute"></select>
+                        <select id="schedHour"></select>
+                        <span class="colon">:</span>
+                        <select id="schedMinute"></select>
+                        <select id="schedAmPm">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
                     </div>
                 </div>
             </div>
