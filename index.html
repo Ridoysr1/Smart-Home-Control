@@ -23,38 +23,23 @@
     <div id="controlBox" style="display:none;">
         <div class="button-grid">
             <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1">
-                <div class="btn-top">
-                    <span id="name_gpio1" class="device-name">Loading...</span>
-                    <span class="edit-icon" onclick="editName('label1', event)">✎</span>
-                </div>
+                <div class="btn-top"><span id="name_gpio1" class="device-name">...</span><span class="edit-icon" onclick="editName('label1', event)">✎</span></div>
                 <span class="status">OFF</span>
             </button>
             <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2">
-                <div class="btn-top">
-                    <span id="name_gpio2" class="device-name">Loading...</span>
-                    <span class="edit-icon" onclick="editName('label2', event)">✎</span>
-                </div>
+                <div class="btn-top"><span id="name_gpio2" class="device-name">...</span><span class="edit-icon" onclick="editName('label2', event)">✎</span></div>
                 <span class="status">OFF</span>
             </button>
             <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3">
-                <div class="btn-top">
-                    <span id="name_gpio3" class="device-name">Loading...</span>
-                    <span class="edit-icon" onclick="editName('label3', event)">✎</span>
-                </div>
+                <div class="btn-top"><span id="name_gpio3" class="device-name">...</span><span class="edit-icon" onclick="editName('label3', event)">✎</span></div>
                 <span class="status">OFF</span>
             </button>
             <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4">
-                <div class="btn-top">
-                    <span id="name_gpio4" class="device-name">Loading...</span>
-                    <span class="edit-icon" onclick="editName('label4', event)">✎</span>
-                </div>
+                <div class="btn-top"><span id="name_gpio4" class="device-name">...</span><span class="edit-icon" onclick="editName('label4', event)">✎</span></div>
                 <span class="status">OFF</span>
             </button>
             <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5">
-                <div class="btn-top">
-                    <span id="name_gpio5" class="device-name">Loading...</span>
-                    <span class="edit-icon" onclick="editName('label5', event)">✎</span>
-                </div>
+                <div class="btn-top"><span id="name_gpio5" class="device-name">...</span><span class="edit-icon" onclick="editName('label5', event)">✎</span></div>
                 <span class="status">OFF</span>
             </button>
         </div>
@@ -68,16 +53,43 @@
     <div id="scheduleBox" style="display:none;">
         <div class="header-row">
             <button onclick="showControlPage()" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
-            <h3>Timers</h3>
+            <h3>Timer List</h3>
         </div>
-        <div class="schedule-list">
-            <div class="schedule-card"><div class="sched-name" id="sched_name_1">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn1" onchange="setTimer('timeOn1', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff1" onchange="setTimer('timeOff1', this.value)"></div></div></div>
-            <div class="schedule-card"><div class="sched-name" id="sched_name_2">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn2" onchange="setTimer('timeOn2', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff2" onchange="setTimer('timeOff2', this.value)"></div></div></div>
-            <div class="schedule-card"><div class="sched-name" id="sched_name_3">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn3" onchange="setTimer('timeOn3', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff3" onchange="setTimer('timeOff3', this.value)"></div></div></div>
-            <div class="schedule-card"><div class="sched-name" id="sched_name_4">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn4" onchange="setTimer('timeOn4', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff4" onchange="setTimer('timeOff4', this.value)"></div></div></div>
-            <div class="schedule-card"><div class="sched-name" id="sched_name_5">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn5" onchange="setTimer('timeOn5', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff5" onchange="setTimer('timeOff5', this.value)"></div></div></div>
+
+        <div class="add-schedule-form">
+            <label>1. Select Switch</label>
+            <select id="schedDeviceSelect">
+                <option value="1">Switch 1</option>
+                <option value="2">Switch 2</option>
+                <option value="3">Switch 3</option>
+                <option value="4">Switch 4</option>
+                <option value="5">Switch 5</option>
+            </select>
+
+            <div class="row-inputs">
+                <div class="half-box">
+                    <label>2. Action</label>
+                    <select id="schedActionSelect">
+                        <option value="On">Turn ON</option>
+                        <option value="Off">Turn OFF</option>
+                    </select>
+                </div>
+                <div class="half-box">
+                    <label>3. Time</label>
+                    <input type="time" id="schedTimeInput">
+                </div>
+            </div>
+
+            <button onclick="addNewSchedule()" class="btn add-btn"><i class="fas fa-plus"></i> Add to List</button>
+        </div>
+
+        <div class="divider">Active Schedules</div>
+
+        <div id="scheduleListContainer" class="schedule-list">
+            <div class="empty-msg">No timers set.</div>
         </div>
     </div>
+
 </div>
 
 <script type="module" src="app.js"></script>
