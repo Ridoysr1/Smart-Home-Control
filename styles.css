@@ -1,4 +1,4 @@
-/* Base Reset */
+/* Base */
 body, html {
     margin: 0; padding: 0; width: 100%; height: 100%;
     background: #0f0f1a; font-family: "Segoe UI", sans-serif;
@@ -14,96 +14,38 @@ body, html {
 }
 @media (max-width: 480px) { .app-container { max-width: 100%; max-height: 100%; } }
 
-/* Header - Fixed Height */
+/* Header */
 .header-section { padding: 25px 20px 10px 20px; text-align: center; flex-shrink: 0; }
 .header-section h1 { margin: 0; font-size: 28px; }
 .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 12px; margin-top: 8px; font-weight: bold; text-transform: uppercase; }
 .online { background: rgba(0, 230, 118, 0.2); color: #00e676; border: 1px solid #00e676; }
 .offline { background: rgba(255, 23, 68, 0.2); color: #ff1744; border: 1px solid #ff1744; }
 
-/* Control Screen - Flex Column */
-.control-screen { 
-    flex-grow: 1; /* এটি পুরো খালি জায়গা নেবে */
-    display: flex; 
-    flex-direction: column; 
-    padding: 20px; 
-    overflow: hidden; 
-}
+/* Control Screen */
+.control-screen { flex-grow: 1; display: flex; flex-direction: column; padding: 20px; overflow: hidden; }
+.switch-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; gap: 15px; }
+.button-grid { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
 
-/* Switch Area - Centers Content */
-.switch-area { 
-    flex-grow: 1; /* ফুটারকে নিচে ঠেলে দেবে */
-    display: flex; 
-    flex-direction: column;
-    justify-content: center; /* লম্বালম্বি মাঝখানে */
-    align-items: center; 
-    overflow-y: auto; 
-    gap: 15px; /* গ্রিড এবং মাস্টার বাটনের মাঝে গ্যাপ */
-}
-
-/* 6 Button Grid */
-.button-grid { 
-    width: 100%; 
-    display: grid; 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 15px; 
-}
-
-/* General Button Style */
-.gpio-button { 
-    background: rgba(255,255,255,0.08); 
-    border-radius: 16px; 
-    border: 1px solid rgba(255,255,255,0.05); 
-    color: white; 
-    padding: 20px 10px; /* প্যাডিং এডজাস্ট করা হয়েছে */
-    cursor: pointer; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 10px; 
-    transition: 0.2s; 
-    user-select: none; -webkit-user-select: none;
-    width: 100%; 
-    box-sizing: border-box;
-    min-height: 90px; /* বাটনের হাইট ফিক্সড */
-}
+/* Buttons */
+.gpio-button { background: rgba(255,255,255,0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); color: white; padding: 20px 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; user-select: none; width: 100%; box-sizing: border-box; min-height: 90px; }
 .gpio-button:active { transform: scale(0.96); }
 .gpio-button.on { background: linear-gradient(135deg, #00c853, #69f0ae); color: #003300; border: none; }
 .device-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
 .status { font-size: 11px; opacity: 0.7; }
 
-/* --- MASTER BUTTON STYLING --- */
-.master-container {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-/* মাস্টার বাটনটি গ্রিডের বাটনগুলোর মতোই সাইজ হবে */
-.master-style {
-    /* (100% - 15px Gap) / 2 = একটি গ্রিড বাটনের সমান প্রস্থ */
-    width: calc(50% - 7.5px) !important; 
-    background: rgba(255, 152, 0, 0.15); 
-    border: 1px solid rgba(255, 152, 0, 0.3);
-}
+/* Master Button */
+.master-container { width: 100%; display: flex; justify-content: center; }
+.master-style { width: calc(50% - 7.5px) !important; background: rgba(255, 152, 0, 0.15); border: 1px solid rgba(255, 152, 0, 0.3); }
 .master-style:active { background: rgba(255, 152, 0, 0.3); }
 
-/* Footer - Pushed to Bottom */
-.footer-section { 
-    flex-shrink: 0; 
-    display: flex; 
-    justify-content: space-between; 
-    padding-top: 15px; 
-    border-top: 1px solid rgba(255,255,255,0.1); 
-    margin-top: 10px;
-}
+/* Footer */
+.footer-section { flex-shrink: 0; display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; }
 .footer-btn { background: none; border: none; color: #aaa; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 8px; }
 .footer-btn:hover { color: white; }
 .footer-btn.left { color: #4fc3f7; }
 .footer-btn.right { color: #ff8a80; }
 
-/* Login & Schedule Screens */
+/* Login & Schedule */
 .auth-screen, .schedule-screen { flex-grow: 1; display: flex; flex-direction: column; padding: 20px; }
 .auth-screen { justify-content: center; }
 .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
@@ -115,11 +57,19 @@ body, html {
 .schedule-list { margin-top: 20px; overflow-y: auto; }
 .schedule-item { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #03a9f4; }
 .del-btn { background: none; border: none; color: #ff8a80; cursor: pointer; }
+
+/* Inputs */
 input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: white; text-align: center; font-size: 16px; outline: none; box-sizing: border-box; }
-.btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; background: #4e54c8; color: white; margin-top: 10px; }
 select { background: rgba(255,255,255,0.15); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box; }
 option { background: #333; }
-.digital-time-box { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 2px; }
-.digital-time-box select { width: 45% !important; padding: 10px 5px !important; margin: 0 !important; text-align: center; background: transparent; }
-.colon { font-size: 20px; font-weight: bold; color: #aaa; margin-top: -2px; }
+
+/* Digital Time Box (AM/PM Style) */
+.digital-time-box { display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 2px; }
+.digital-time-box select { padding: 10px 2px !important; margin: 0 !important; text-align: center; background: transparent; font-size: 14px; }
+/* Hour & Minute Width */
+#schedHour, #schedMinute { width: 35% !important; }
+/* AM/PM Width */
+#schedAmPm { width: 30% !important; font-size: 12px; font-weight: bold; color: #4fc3f7; }
+
+.colon { font-size: 18px; font-weight: bold; color: #aaa; margin-top: -2px; }
 label { font-size: 12px; color: #aaa; margin-bottom: 2px; display: block; }
