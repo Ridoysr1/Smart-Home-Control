@@ -1,83 +1,187 @@
+/* --- Base Styles --- */
 body {
-  margin: 0; padding: 0;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  height: 100vh;
-  display: flex; justify-content: center; align-items: center;
-  font-family: "Segoe UI", sans-serif; color: white;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Segoe UI", sans-serif;
+    color: white;
 }
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px;}
 
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+
+/* --- Card Container --- */
 .card {
-  width: 380px; max-width: 92%; max-height: 90vh; overflow-y: auto;
-  padding: 28px 25px; border-radius: 20px;
-  background: rgba(255,255,255,0.12); backdrop-filter: blur(14px);
-  box-shadow: 0 10px 45px rgba(0,0,0,0.25); text-align: center;
+    width: 380px;
+    max-width: 92%;
+    max-height: 90vh; /* স্ক্রিনের বাইরে যাবে না, স্ক্রল হবে */
+    overflow-y: auto;
+    padding: 28px 25px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 45px rgba(0, 0, 0, 0.25);
+    text-align: center;
 }
-h1 { margin-bottom: 5px; font-size: 26px; }
+
+h1 {
+    margin-bottom: 5px;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+/* --- Status Badge --- */
 .status-badge {
-  display: inline-block; padding: 6px 15px; border-radius: 50px;
-  font-size: 12px; margin-bottom: 15px; font-weight: 600;
+    display: inline-block;
+    padding: 6px 15px;
+    border-radius: 50px;
+    font-size: 12px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 .online { background: #00e676; color: #000; }
 .offline { background: #ff1744; color: #fff; }
 
+/* --- Inputs & Login --- */
 #authBox { width: 100%; text-align: center; }
+
 input {
-  width: 90%; padding: 14px; margin: 8px 0; border-radius: 12px;
-  border: none; outline: none; background: rgba(255,255,255,0.15);
-  color: white; text-align: center;
+    width: 90%;
+    padding: 14px;
+    margin: 8px 0;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    text-align: center;
+    transition: 0.3s;
 }
+input:focus {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+input::placeholder { color: rgba(255, 255, 255, 0.4); }
+
+#authMsg {
+    margin-top: 10px;
+    color: #ff8a80;
+    font-size: 14px;
+}
+
+/* --- Global Buttons (Login/Logout) --- */
 .btn {
-  width: 100%; padding: 14px; margin-top: 15px; border-radius: 12px;
-  border: none; cursor: pointer; color: white; font-weight: 600;
-  background: linear-gradient(135deg, #03a9f4, #0277bd);
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    border-radius: 12px;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    background: linear-gradient(135deg, #03a9f4, #0277bd);
+    transition: 0.25s ease;
+    box-shadow: 0 6px 18px rgba(3, 169, 244, 0.35);
 }
-.logout-btn { background: linear-gradient(135deg, #ff5252, #d32f2f); margin-top: 25px; }
+.btn:hover { transform: translateY(-2px); }
+.logout-btn {
+    background: linear-gradient(135deg, #ff5252, #d32f2f);
+    box-shadow: 0 6px 18px rgba(255, 82, 82, 0.35);
+    margin-top: 25px;
+}
 
-/* Grid for 5 buttons */
+/* --- Control Grid & GPIO Buttons --- */
 .button-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 12px; margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
 }
+
 .gpio-button {
-  width: 100%; padding: 18px 10px; border-radius: 14px;
-  background: linear-gradient(135deg, #2a3b55, #1e2a3d);
-  border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
-  color: white; font-size: 16px; font-weight: 600;
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s;
+    width: 100%;
+    padding: 15px 10px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2a3b55, #1e2a3d);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column; /* আইটেমগুলো উপর-নিচে সাজাবে */
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
-.gpio-button:hover { transform: translateY(-3px); }
+
+.gpio-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #344966, #25334a);
+}
+
+/* --- ON State --- */
 .gpio-button.on {
-  background: linear-gradient(135deg, #00c853, #69f0ae);
-  color: #003300; border: none; box-shadow: 0 8px 25px rgba(0, 200, 83, 0.5);
+    background: linear-gradient(135deg, #00c853, #69f0ae);
+    color: #003300;
+    border: none;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 200, 83, 0.5);
 }
 
-.status { font-size: 12px; opacity: 0.8; font-weight: normal; }
-
-/* বাটনের ভেতরের উপরের অংশ (নাম + এডিট আইকন) */
+/* --- Device Name & Edit Icon Area --- */
 .btn-top {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
 }
 
-/* এডিট আইকনের ডিজাইন */
+.device-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
+}
+
 .edit-icon {
-  font-size: 14px;
-  opacity: 0.6;
-  cursor: pointer;
-  padding: 2px 5px;
-  border-radius: 4px;
-  transition: 0.2s;
-  background: rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    opacity: 0.5;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: 0.2s;
+}
+
+/* ON অবস্থায় এডিট আইকনের কালার ঠিক রাখা */
+.gpio-button.on .edit-icon {
+    background: rgba(0, 50, 0, 0.1); 
+    color: #003300;
 }
 
 .edit-icon:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* --- Status Text (ON/OFF) --- */
+.status {
+    font-size: 12px;
+    font-weight: normal;
+    opacity: 0.8;
+    letter-spacing: 1px;
 }
