@@ -18,214 +18,115 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-// UI Refs
-const authBox = document.getElementById("authBox");
-const controlBox = document.getElementById("controlBox");
-const scheduleBox = document.getElementById("scheduleBox");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const authMsg = document.getElementById("authMsg");
-const badge = document.getElementById("statusBadge");
-
-// লং প্রেস ভেরিয়েবল
-let pressTimer;
-let isLongPress = false;
-
-let deviceNames = ["Switch 1", "Switch 2", "Switch 3", "Switch 4", "Switch 5"];
-let activeTimers = {};
-
-loginBtn.onclick = async () => {
-  authMsg.textContent = "Logging in...";
-  try {
-    await signInWithEmailAndPassword(auth, document.getElementById("emailField").value, document.getElementById("passwordField").value);
-  } catch (e) { authMsg.textContent = e.message; }
+// UI Elements
+const ui = {
+    authBox: document.getElementById("authBox"),
+    controlBox: document.getElementById("controlBox"),
+    scheduleBox: document.getElementById("scheduleBox"),
+    statusBadge: document.getElementById("statusBadge")
 };
 
-logoutBtn.onclick = () => signOut(auth);
+let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
+let activeTimers = {};
+let pressTimer;
+
+document.getElementById("loginBtn").onclick = async () => {
+    try { await signInWithEmailAndPassword(auth, document.getElementById("emailField").value, document.getElementById("passwordField").value); }
+    catch (e) { document.getElementById("authMsg").textContent = e.message; }
+};
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    authBox.style.display = "none";
-    controlBox.style.display = "block";
-    scheduleBox.style.display = "none";
-    badge.className = "status-badge online";
-    badge.textContent = "System Online";
-    startListeners();
-  } else {
-    authBox.style.display = "block";
-    controlBox.style.display = "none";
-    scheduleBox.style.display = "none";
-    badge.className = "status-badge offline";
-    badge.textContent = "System Offline";
-  }
+    if (user) {
+        ui.authBox.style.display = "none";
+        ui.controlBox.style.display = "flex"; // Fixed layout
+        ui.statusBadge.className = "status-dot online";
+        startListeners();
+    } else {
+        ui.authBox.style.display = "block";
+        ui.controlBox.style.display = "none";
+        ui.scheduleBox.style.display = "none";
+        ui.statusBadge.className = "status-dot offline";
+    }
 });
 
 function startListeners() {
-  for(let i=1; i<=5; i++) {
-    const idx = i;
-    
-    // Status Listener
-    onValue(ref(db, "/gpio" + idx), (snap) => {
-      const val = snap.val();
-      const btn = document.getElementById("gpio" + idx + "Btn");
-      const txt = btn ? btn.querySelector(".status") : null;
-      if(btn) {
-        if(val === 1) { btn.classList.add("on"); if(txt) txt.textContent="ON"; }
-        else { btn.classList.remove("on"); if(txt) txt.textContent="OFF"; }
-      }
-    });
-
-    // Label Listener
-    onValue(ref(db, "/label" + idx), (snap) => {
-      const name = snap.val();
-      if(name) {
-          deviceNames[idx-1] = name;
-          const el = document.getElementById("name_gpio" + idx);
-          if(el) el.textContent = name;
-          updateDropdown();
-          renderScheduleList();
-      }
-    });
-
-    // Timer Listener
-    onValue(ref(db, "/timeOn" + idx), (snap) => {
-       activeTimers["timeOn" + idx] = snap.val();
-       renderScheduleList();
-    });
-    onValue(ref(db, "/timeOff" + idx), (snap) => {
-       activeTimers["timeOff" + idx] = snap.val();
-       renderScheduleList();
-    });
-  }
-
-  // --- বাটন ইভেন্ট হ্যান্ডলার (ক্লিক ও লং প্রেস) ---
-  document.querySelectorAll(".gpio-button").forEach((btn) => {
-    
-    // ১. ক্লিক লজিক (Toggle)
-    btn.onclick = (e) => {
-        // যদি লং প্রেস হয়ে থাকে, তবে টোগল হবে না
-        if(isLongPress) {
-            isLongPress = false; // রিসেট
-            return;
-        }
+    for(let i=1; i<=6; i++) { // Loop 6 times
+        const idx = i;
         
-        // টোগল কোড
-        const key = btn.dataset.gpio;
-        const newState = btn.classList.contains("on") ? 0 : 1;
-        set(ref(db, "/" + key), newState);
-    };
+        // GPIO
+        onValue(ref(db, "/gpio" + idx), (snap) => {
+            const val = snap.val();
+            const btn = document.getElementById("gpio" + idx + "Btn");
+            const txt = btn ? btn.querySelector(".status") : null;
+            if(btn) {
+                if(val === 1) { btn.classList.add("on"); if(txt) txt.textContent="ON"; }
+                else { btn.classList.remove("on"); if(txt) txt.textContent="OFF"; }
+            }
+        });
 
-    // ২. লং প্রেস লজিক
-    const handlePressStart = (e) => {
-        isLongPress = false; // শুরুতে ফলস
-        pressTimer = setTimeout(() => {
-            isLongPress = true; // ৮০০ms পর লং প্রেস ডিটেক্ট হবে
-            
-            // ভাইব্রেশন (মোবাইলে ফিডব্যাকের জন্য)
-            if(navigator.vibrate) navigator.vibrate(50);
-            
-            // নাম এডিট ফাংশন কল
-            const labelKey = btn.dataset.label; // html এ data-label="label1" থাকতে হবে
-            editName(labelKey);
-            
-        }, 800); // ৮০০ মিলিসেকেন্ড সময়
-    };
+        // Label
+        onValue(ref(db, "/label" + idx), (snap) => {
+            if(snap.val()) {
+                deviceNames[idx-1] = snap.val();
+                document.getElementById("name_gpio" + idx).textContent = snap.val();
+                updateDropdown();
+                renderList();
+            }
+        });
 
-    const handlePressEnd = (e) => {
-        clearTimeout(pressTimer); // ৮০০ms এর আগে হাত উঠালে টাইমার বাতিল
-    };
+        // Timer
+        onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn"+idx] = snap.val(); renderList(); });
+        onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff"+idx] = snap.val(); renderList(); });
+    }
 
-    // ইভেন্ট লিসেনার যোগ করা (মাউস এবং টাচ দুটোর জন্য)
-    btn.addEventListener("mousedown", handlePressStart);
-    btn.addEventListener("touchstart", handlePressStart);
-
-    btn.addEventListener("mouseup", handlePressEnd);
-    btn.addEventListener("mouseleave", handlePressEnd);
-    btn.addEventListener("touchend", handlePressEnd);
-    btn.addEventListener("touchmove", handlePressEnd); // স্ক্রল করলে বাতিল
-    
-    // রাইট ক্লিক মেনু বন্ধ করা
-    btn.addEventListener("contextmenu", (e) => e.preventDefault());
-  });
+    // Button Logic
+    document.querySelectorAll(".gpio-button").forEach((btn) => {
+        let isLong = false;
+        const start = () => { isLong = false; pressTimer = setTimeout(() => { isLong = true; editName(btn.dataset.label); }, 800); };
+        const end = () => clearTimeout(pressTimer);
+        
+        btn.addEventListener("mousedown", start); btn.addEventListener("touchstart", start);
+        btn.addEventListener("mouseup", end); btn.addEventListener("touchend", end);
+        btn.addEventListener("click", () => {
+            if(!isLong) {
+                const key = btn.dataset.gpio;
+                const newState = btn.classList.contains("on") ? 0 : 1;
+                set(ref(db, "/" + key), newState);
+            }
+        });
+        btn.addEventListener("contextmenu", e => e.preventDefault());
+    });
 }
 
 function updateDropdown() {
-    const select = document.getElementById("schedDeviceSelect");
-    if(!select) return;
-    const currentVal = select.value;
-    select.innerHTML = "";
-    deviceNames.forEach((name, index) => {
-        const option = document.createElement("option");
-        option.value = index + 1;
-        option.text = name;
-        select.appendChild(option);
-    });
-    select.value = currentVal;
+    const s = document.getElementById("schedDeviceSelect");
+    s.innerHTML = "";
+    deviceNames.forEach((n, i) => { let o = document.createElement("option"); o.value = i+1; o.text = n; s.add(o); });
 }
 
-function renderScheduleList() {
-    const container = document.getElementById("scheduleListContainer");
-    if(!container) return;
-    container.innerHTML = "";
-    let hasTimer = false;
-    for(let i=1; i<=5; i++) {
-        if(activeTimers["timeOn"+i] && activeTimers["timeOn"+i] !== "") {
-            createListItem(container, i, "On", activeTimers["timeOn"+i]);
-            hasTimer = true;
-        }
-        if(activeTimers["timeOff"+i] && activeTimers["timeOff"+i] !== "") {
-            createListItem(container, i, "Off", activeTimers["timeOff"+i]);
-            hasTimer = true;
-        }
+function renderList() {
+    const c = document.getElementById("scheduleListContainer");
+    c.innerHTML = "";
+    for(let i=1; i<=6; i++) {
+        if(activeTimers["timeOn"+i]) addItem(c, i, "On", activeTimers["timeOn"+i]);
+        if(activeTimers["timeOff"+i]) addItem(c, i, "Off", activeTimers["timeOff"+i]);
     }
-    if(!hasTimer) container.innerHTML = '<div class="empty-msg">No active timers set.</div>';
 }
 
-function createListItem(container, index, action, time) {
-    const div = document.createElement("div");
-    div.className = "schedule-item";
-    const actionClass = action === "On" ? "on-text" : "off-text";
-    const actionText = action.toUpperCase();
-    const deviceName = deviceNames[index-1] || "Switch "+index;
-
-    div.innerHTML = `
-        <div class="item-info">
-            <div class="item-name">${deviceName}</div>
-            <div class="item-action">Will turn <span class="${actionClass}">${actionText}</span> at <b>${time}</b></div>
-        </div>
-        <button class="delete-btn" onclick="deleteTimer(${index}, '${action}')">
-            <i class="fas fa-trash"></i>
-        </button>
-    `;
-    container.appendChild(div);
+function addItem(c, i, act, time) {
+    c.innerHTML += `
+    <div class="schedule-item">
+        <div><b>${deviceNames[i-1]}</b> <span style="font-size:12px">will turn <span class="${act=='On'?'on-text':'off-text'}">${act.toUpperCase()}</span> at ${time}</span></div>
+        <button class="del-btn" onclick="window.delT(${i}, '${act}')"><i class="fas fa-trash"></i></button>
+    </div>`;
 }
 
-// --- GLOBAL FUNCTIONS ---
-
-// নাম এডিট ফাংশন (লং প্রেস করলে এটি কল হবে)
-window.editName = function(labelKey) {
-  let newName = prompt("Enter new name for this switch:");
-  if (newName && newName.trim() !== "") {
-      set(ref(db, "/" + labelKey), newName)
-      .then(() => console.log("Name updated"))
-      .catch((err) => alert("Error: " + err.message));
-  }
+window.editName = (k) => { let n = prompt("Name:"); if(n) set(ref(db, "/"+k), n); };
+window.addNewSchedule = () => {
+    let d = document.getElementById("schedDeviceSelect").value;
+    let a = document.getElementById("schedActionSelect").value;
+    let t = document.getElementById("schedTimeInput").value;
+    if(t) set(ref(db, "/time"+a+d), t);
 };
-
-window.addNewSchedule = function() {
-    const devId = document.getElementById("schedDeviceSelect").value;
-    const action = document.getElementById("schedActionSelect").value;
-    const time = document.getElementById("schedTimeInput").value;
-    if(!time) { alert("Please select a time!"); return; }
-    const dbKey = "/time" + action + devId;
-    set(ref(db, dbKey), time)
-    .then(() => alert("Schedule Added!"))
-    .catch(err => alert("Error: " + err.message));
-};
-
-window.deleteTimer = function(index, action) {
-    const dbKey = "/time" + action + index;
-    if(confirm(`Remove timer?`)) {
-        set(ref(db, dbKey), "");
-    }
-};
+window.delT = (i, a) => set(ref(db, "/time"+a+i), "");
