@@ -3,28 +3,25 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smart Home Controller</title>
+    <title>Smart Home</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
 <body>
 
 <div class="card">
-
     <h1>Smart Home</h1>
-    <div id="statusBadge" class="status-badge offline">System Offline</div>
+    <div id="statusBadge" class="status-badge offline">Offline</div>
 
     <div id="authBox">
         <input id="emailField" type="email" placeholder="Email Address" />
         <input id="passwordField" type="password" placeholder="Password" />
-        <button id="loginBtn" class="btn login-btn">Login System</button>
+        <button id="loginBtn" class="btn login-btn">Login</button>
         <p id="authMsg"></p>
     </div>
 
     <div id="controlBox" style="display:none;">
-        
         <div class="button-grid">
-            
             <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1">
                 <div class="btn-top">
                     <span id="name_gpio1" class="device-name">Loading...</span>
@@ -32,7 +29,6 @@
                 </div>
                 <span class="status">OFF</span>
             </button>
-
             <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2">
                 <div class="btn-top">
                     <span id="name_gpio2" class="device-name">Loading...</span>
@@ -40,7 +36,6 @@
                 </div>
                 <span class="status">OFF</span>
             </button>
-
             <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3">
                 <div class="btn-top">
                     <span id="name_gpio3" class="device-name">Loading...</span>
@@ -48,7 +43,6 @@
                 </div>
                 <span class="status">OFF</span>
             </button>
-
             <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4">
                 <div class="btn-top">
                     <span id="name_gpio4" class="device-name">Loading...</span>
@@ -56,7 +50,6 @@
                 </div>
                 <span class="status">OFF</span>
             </button>
-            
             <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5">
                 <div class="btn-top">
                     <span id="name_gpio5" class="device-name">Loading...</span>
@@ -64,15 +57,39 @@
                 </div>
                 <span class="status">OFF</span>
             </button>
-
         </div>
-
-        <button id="logoutBtn" class="btn logout-btn">Logout</button>
+        
+        <div class="nav-area">
+            <button onclick="showSchedulePage()" class="btn nav-btn"><i class="fas fa-clock"></i> Set Timer</button>
+            <button id="logoutBtn" class="btn logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
     </div>
 
+    <div id="scheduleBox" style="display:none;">
+        <div class="header-row">
+            <button onclick="showControlPage()" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+            <h3>Timers</h3>
+        </div>
+        <div class="schedule-list">
+            <div class="schedule-card"><div class="sched-name" id="sched_name_1">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn1" onchange="setTimer('timeOn1', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff1" onchange="setTimer('timeOff1', this.value)"></div></div></div>
+            <div class="schedule-card"><div class="sched-name" id="sched_name_2">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn2" onchange="setTimer('timeOn2', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff2" onchange="setTimer('timeOff2', this.value)"></div></div></div>
+            <div class="schedule-card"><div class="sched-name" id="sched_name_3">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn3" onchange="setTimer('timeOn3', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff3" onchange="setTimer('timeOff3', this.value)"></div></div></div>
+            <div class="schedule-card"><div class="sched-name" id="sched_name_4">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn4" onchange="setTimer('timeOn4', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff4" onchange="setTimer('timeOff4', this.value)"></div></div></div>
+            <div class="schedule-card"><div class="sched-name" id="sched_name_5">Loading...</div><div class="timer-inputs"><div class="time-group"><label>ON</label><input type="time" id="timeOn5" onchange="setTimer('timeOn5', this.value)"></div><div class="time-group"><label>OFF</label><input type="time" id="timeOff5" onchange="setTimer('timeOff5', this.value)"></div></div></div>
+        </div>
+    </div>
 </div>
 
 <script type="module" src="app.js"></script>
-
+<script>
+    window.showSchedulePage = function() {
+        document.getElementById('controlBox').style.display = 'none';
+        document.getElementById('scheduleBox').style.display = 'block';
+    }
+    window.showControlPage = function() {
+        document.getElementById('scheduleBox').style.display = 'none';
+        document.getElementById('controlBox').style.display = 'block';
+    }
+</script>
 </body>
 </html>
