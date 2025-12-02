@@ -53,4 +53,31 @@ input {
   background: linear-gradient(135deg, #00c853, #69f0ae);
   color: #003300; border: none; box-shadow: 0 8px 25px rgba(0, 200, 83, 0.5);
 }
+
 .status { font-size: 12px; opacity: 0.8; font-weight: normal; }
+
+/* বাটনের ভেতরের উপরের অংশ (নাম + এডিট আইকন) */
+.btn-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* এডিট আইকনের ডিজাইন */
+.edit-icon {
+  font-size: 14px;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+  transition: 0.2s;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.edit-icon:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
