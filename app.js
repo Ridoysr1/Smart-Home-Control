@@ -40,9 +40,12 @@ document.getElementById("logoutBtn").onclick = () => {
     }
 };
 
-// --- NEW: Master Switch Logic ---
-document.getElementById("masterBtn").onclick = () => {
-    // Check if any light is currently ON
+// --- MASTER BUTTON LOGIC ---
+const masterBtn = document.getElementById("masterBtn");
+const masterStatus = document.getElementById("masterStatus");
+
+// চেক করে বাটন আপডেট করা
+function updateMasterButton() {
     let anyOn = false;
     for(let i=1; i<=6; i++) {
         const btn = document.getElementById("gpio" + i + "Btn");
@@ -51,16 +54,21 @@ document.getElementById("masterBtn").onclick = () => {
             break;
         }
     }
-    
-    // If any ON -> Turn All OFF (0)
-    // If all OFF -> Turn All ON (1)
-    const newState = anyOn ? 0 : 1;
 
-    // Send to Firebase
-    for(let i=1; i<=6; i++) {
-        set(ref(db, "/gpio" + i), newState);
+    if (anyOn) {
+        masterStatus.textContent = "ALL OFF";
+        masterBtn.onclick = () => {
+            // সব অফ করা
+            for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), 0);
+        };
+    } else {
+        masterStatus.textContent = "ALL ON";
+        masterBtn.onclick = () => {
+            // সব অন করা
+            for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), 1);
+        };
     }
-};
+}
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -89,7 +97,10 @@ function startListeners() {
                 if(val === 1) { btn.classList.add("on"); if(txt) txt.textContent="ON"; }
                 else { btn.classList.remove("on"); if(txt) txt.textContent="OFF"; }
             }
+            // প্রতি আপডেটে মাস্টার বাটন চেক হবে
+            updateMasterButton();
         });
+        
         onValue(ref(db, "/label" + idx), (snap) => {
             if(snap.val()) {
                 deviceNames[idx-1] = snap.val();
@@ -103,7 +114,7 @@ function startListeners() {
         onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff"+idx] = snap.val(); renderList(); });
     }
 
-    document.querySelectorAll(".gpio-button").forEach((btn) => {
+    document.querySelectorAll(".gpio-button:not(.master-style)").forEach((btn) => {
         let isLong = false;
         const start = () => { isLong = false; pressTimer = setTimeout(() => { isLong = true; editName(btn.dataset.label); }, 800); };
         const end = () => clearTimeout(pressTimer);
