@@ -1,41 +1,117 @@
-<div id="scheduleBox" class="schedule-screen" style="display:none;">
-    <div class="header-row">
-        <button onclick="showControlPage()" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
-        <h3>Timers</h3>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Smart Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<div class="app-container">
     
-    <div class="add-schedule-form">
-        <label>Select Switch</label>
-        <select id="schedDeviceSelect">
-            <option value="1">Switch 1</option>
-            <option value="2">Switch 2</option>
-            <option value="3">Switch 3</option>
-            <option value="4">Switch 4</option>
-            <option value="5">Switch 5</option>
-            <option value="6">Switch 6</option>
-        </select>
+    <div class="header-section">
+        <h1>My Home</h1>
+        <div id="statusBadge" class="status-badge offline">Offline</div>
+    </div>
 
-        <div class="row-inputs">
-            <div class="half">
-                <label>Action</label>
-                <select id="schedActionSelect">
-                    <option value="On">Turn ON</option>
-                    <option value="Off">Turn OFF</option>
-                </select>
-            </div>
+    <div id="authBox" class="auth-screen">
+        <h2>Welcome</h2>
+        <input id="emailField" type="email" placeholder="Email" />
+        <input id="passwordField" type="password" placeholder="Password" />
+        <button id="loginBtn" class="btn login-btn">Sign In</button>
+        <p id="authMsg"></p>
+    </div>
 
-            <div class="half">
-                <label>Time (HH : MM)</label>
-                <div class="digital-time-box">
-                    <select id="schedHour"></select>
-                    <span class="colon">:</span>
-                    <select id="schedMinute"></select>
-                </div>
+    <div id="controlBox" class="control-screen" style="display:none;">
+        
+        <div class="switch-grid-container">
+            <div class="button-grid">
+                <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1" data-label="label1">
+                    <div class="btn-top"><span id="name_gpio1" class="device-name">...</span></div>
+                    <span class="status">OFF</span>
+                </button>
+                <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2" data-label="label2">
+                    <div class="btn-top"><span id="name_gpio2" class="device-name">...</span></div>
+                    <span class="status">OFF</span>
+                </button>
+                <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3" data-label="label3">
+                    <div class="btn-top"><span id="name_gpio3" class="device-name">...</span></div>
+                    <span class="status">OFF</span>
+                </button>
+                <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4" data-label="label4">
+                    <div class="btn-top"><span id="name_gpio4" class="device-name">...</span></div>
+                    <span class="status">OFF</span>
+                </button>
+                <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5" data-label="label5">
+                    <div class="btn-top"><span id="name_gpio5" class="device-name">...</span></div>
+                    <span class="status">OFF</span>
+                </button>
+                <button id="gpio6Btn" class="gpio-button" data-gpio="gpio6" data-label="label6">
+                    <div class="btn-top"><span id="name_gpio6" class="device-name">...</span></div>
+                    <span class="status">OFF</span>
+                </button>
             </div>
         </div>
-        
-        <button onclick="addNewSchedule()" class="btn add-btn">Set Timer</button>
+
+        <div class="footer-section">
+            <button onclick="showSchedulePage()" class="footer-btn left">
+                <i class="fas fa-clock"></i> Timer
+            </button>
+            
+            <button id="logoutBtn" class="footer-btn right">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
     </div>
 
-    <div id="scheduleListContainer" class="schedule-list"></div>
+    <div id="scheduleBox" class="schedule-screen" style="display:none;">
+        <div class="header-row">
+            <button onclick="showControlPage()" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+            <h3>Set Timer</h3>
+        </div>
+        
+        <div class="add-schedule-form">
+            <label>Device</label>
+            <select id="schedDeviceSelect">
+                <option value="1">Switch 1</option>
+                <option value="2">Switch 2</option>
+                <option value="3">Switch 3</option>
+                <option value="4">Switch 4</option>
+                <option value="5">Switch 5</option>
+                <option value="6">Switch 6</option>
+            </select>
+
+            <div class="row-inputs">
+                <div class="half">
+                    <label>Action</label>
+                    <select id="schedActionSelect">
+                        <option value="On">ON</option>
+                        <option value="Off">OFF</option>
+                    </select>
+                </div>
+                
+                <div class="half">
+                    <label>Time (HH:MM)</label>
+                    <div class="digital-time-box">
+                        <select id="schedHour"></select>
+                        <span class="colon">:</span>
+                        <select id="schedMinute"></select>
+                    </div>
+                </div>
+            </div>
+            <button onclick="addNewSchedule()" class="btn add-btn">Add Schedule</button>
+        </div>
+        <div id="scheduleListContainer" class="schedule-list"></div>
+    </div>
+
 </div>
+
+<script type="module" src="app.js"></script>
+<script>
+    window.showSchedulePage = () => { document.getElementById('controlBox').style.display='none'; document.getElementById('scheduleBox').style.display='flex'; }
+    window.showControlPage = () => { document.getElementById('scheduleBox').style.display='none'; document.getElementById('controlBox').style.display='flex'; }
+</script>
+</body>
+</html>
