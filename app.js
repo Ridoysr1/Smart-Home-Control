@@ -40,34 +40,29 @@ document.getElementById("logoutBtn").onclick = () => {
     }
 };
 
-// --- MASTER BUTTON LOGIC ---
 const masterBtn = document.getElementById("masterBtn");
 const masterStatus = document.getElementById("masterStatus");
 
-// চেক করে বাটন আপডেট করা
+masterBtn.onclick = () => {
+    let anyOn = false;
+    for(let i=1; i<=6; i++) {
+        const btn = document.getElementById("gpio" + i + "Btn");
+        if(btn && btn.classList.contains("on")) { anyOn = true; break; }
+    }
+    const actionText = anyOn ? "Turn ALL OFF" : "Turn ALL ON";
+    const newState = anyOn ? 0 : 1;
+    if (confirm(`Are you sure you want to ${actionText}?`)) {
+        for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), newState);
+    }
+};
+
 function updateMasterButton() {
     let anyOn = false;
     for(let i=1; i<=6; i++) {
         const btn = document.getElementById("gpio" + i + "Btn");
-        if(btn && btn.classList.contains("on")) {
-            anyOn = true;
-            break;
-        }
+        if(btn && btn.classList.contains("on")) { anyOn = true; break; }
     }
-
-    if (anyOn) {
-        masterStatus.textContent = "ALL OFF";
-        masterBtn.onclick = () => {
-            // সব অফ করা
-            for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), 0);
-        };
-    } else {
-        masterStatus.textContent = "ALL ON";
-        masterBtn.onclick = () => {
-            // সব অন করা
-            for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), 1);
-        };
-    }
+    masterStatus.textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
 onAuthStateChanged(auth, (user) => {
@@ -97,7 +92,6 @@ function startListeners() {
                 if(val === 1) { btn.classList.add("on"); if(txt) txt.textContent="ON"; }
                 else { btn.classList.remove("on"); if(txt) txt.textContent="OFF"; }
             }
-            // প্রতি আপডেটে মাস্টার বাটন চেক হবে
             updateMasterButton();
         });
         
@@ -132,11 +126,23 @@ function startListeners() {
     });
 }
 
+// 12-Hour Dropdown Population
 function populateTimeSelects() {
     const h = document.getElementById("schedHour");
     const m = document.getElementById("schedMinute");
-    for(let i=0; i<24; i++) { let o=document.createElement("option"); let v=i<10?"0"+i:i; o.value=v; o.text=v; h.add(o); }
-    for(let i=0; i<60; i++) { let o=document.createElement("option"); let v=i<10?"0"+i:i; o.value=v; o.text=v; m.add(o); }
+    
+    // Hours 01-12
+    for(let i=1; i<=12; i++) { 
+        let val = i < 10 ? "0" + i : i; 
+        let o = document.createElement("option"); 
+        o.value = val; o.text = val; h.add(o); 
+    }
+    // Minutes 00-59
+    for(let i=0; i<60; i++) { 
+        let val = i < 10 ? "0" + i : i; 
+        let o = document.createElement("option"); 
+        o.value = val; o.text = val; m.add(o); 
+    }
 }
 window.addEventListener('load', populateTimeSelects);
 
@@ -148,13 +154,32 @@ function updateDropdown() {
     s.value = curr;
 }
 
+// Helper: Convert 24h (from DB) to 12h (for UI)
+function formatTime12(time24) {
+    if(!time24) return "";
+    let [H, M] = time24.split(":");
+    H = parseInt(H);
+    let ampm = H >= 12 ? "PM" : "AM";
+    H = H % 12;
+    H = H ? H : 12; // 0 should be 12
+    let H_str = H < 10 ? "0" + H : H;
+    return `${H_str}:${M} ${ampm}`;
+}
+
 function renderList() {
     const c = document.getElementById("scheduleListContainer");
     c.innerHTML = "";
     let has = false;
     for(let i=1; i<=6; i++) {
-        if(activeTimers["timeOn"+i]) { addItem(c, i, "On", activeTimers["timeOn"+i]); has=true; }
-        if(activeTimers["timeOff"+i]) { addItem(c, i, "Off", activeTimers["timeOff"+i]); has=true; }
+        if(activeTimers["timeOn"+i]) { 
+            // Display formatted 12h time
+            addItem(c, i, "On", formatTime12(activeTimers["timeOn"+i])); 
+            has=true; 
+        }
+        if(activeTimers["timeOff"+i]) { 
+            addItem(c, i, "Off", formatTime12(activeTimers["timeOff"+i])); 
+            has=true; 
+        }
     }
     if(!has) c.innerHTML = "<div style='color:#aaa;text-align:center;margin-top:20px'>No timers set</div>";
 }
@@ -169,12 +194,23 @@ function addItem(c, i, act, time) {
 
 window.editName = (k) => { let n = prompt("Name:"); if(n) set(ref(db, "/"+k), n); };
 
+// Add Schedule: Convert 12h (UI) -> 24h (DB)
 window.addNewSchedule = () => {
     let d = document.getElementById("schedDeviceSelect").value;
     let a = document.getElementById("schedActionSelect").value;
     let hh = document.getElementById("schedHour").value;
     let mm = document.getElementById("schedMinute").value;
-    let t = hh + ":" + mm;
+    let ampm = document.getElementById("schedAmPm").value;
+
+    // Logic to convert to 24 Hour format for ESP32
+    let h = parseInt(hh);
+    if(ampm === "PM" && h < 12) h = h + 12;
+    if(ampm === "AM" && h === 12) h = 0;
+    
+    // Format to HH:MM (Example: 08:30 or 20:30)
+    let h_str = h < 10 ? "0" + h : h;
+    let t = h_str + ":" + mm;
+
     if(t) set(ref(db, "/time"+a+d), t);
 };
 window.delT = (i, a) => set(ref(db, "/time"+a+i), "");
