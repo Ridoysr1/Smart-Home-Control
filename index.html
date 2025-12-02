@@ -21,27 +21,52 @@
   </div>
 
   <div id="controlBox" style="display:none;">
+    
     <div class="button-grid">
       <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1">
-        <span>Light 1</span> <span class="status">OFF</span>
+        <div class="btn-top">
+          <span id="name_gpio1">Light 1</span>
+          <span class="edit-icon" onclick="editName('label1', event)">✎</span>
+        </div>
+        <span class="status">OFF</span>
       </button>
 
       <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2">
-        <span>Light 2</span> <span class="status">OFF</span>
+        <div class="btn-top">
+          <span id="name_gpio2">Light 2</span>
+          <span class="edit-icon" onclick="editName('label2', event)">✎</span>
+        </div>
+        <span class="status">OFF</span>
       </button>
 
       <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3">
-        <span>Fan 1</span> <span class="status">OFF</span>
+        <div class="btn-top">
+          <span id="name_gpio3">Fan 1</span>
+          <span class="edit-icon" onclick="editName('label3', event)">✎</span>
+        </div>
+        <span class="status">OFF</span>
       </button>
 
       <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4">
-        <span>Socket 1</span> <span class="status">OFF</span>
+        <div class="btn-top">
+          <span id="name_gpio4">Socket 1</span>
+          <span class="edit-icon" onclick="editName('label4', event)">✎</span>
+        </div>
+        <span class="status">OFF</span>
       </button>
       
       <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5">
-        <span>Socket 2</span> <span class="status">OFF</span>
+        <div class="btn-top">
+          <span id="name_gpio5">Socket 2</span>
+          <span class="edit-icon" onclick="editName('label5', event)">✎</span>
+        </div>
+        <span class="status">OFF</span>
       </button>
+
     </div>
+
+    <button id="logoutBtn" class="btn logout-btn">Logout</button>
+  </div>
 
     <button id="logoutBtn" class="btn logout-btn">Logout</button>
   </div>
