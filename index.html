@@ -1,74 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Smart Home Controller</title>
-<link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Home Controller</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
 <div class="card">
-  <h1>Smart Home</h1>
-  <div id="statusBadge" class="status-badge offline">System Offline</div>
 
-  <div id="authBox">
-    <input id="emailField" type="email" placeholder="Email Address" />
-    <input id="passwordField" type="password" placeholder="Password" />
-    <button id="loginBtn" class="btn login-btn">Login</button>
-    <p id="authMsg"></p>
-  </div>
+    <h1>Smart Home</h1>
+    <div id="statusBadge" class="status-badge offline">System Offline</div>
 
-  <div id="controlBox" style="display:none;">
-    
-    <div class="button-grid">
-      <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1">
-        <div class="btn-top">
-          <span id="name_gpio1">Light 1</span>
-          <span class="edit-icon" onclick="editName('label1', event)">✎</span>
-        </div>
-        <span class="status">OFF</span>
-      </button>
-
-      <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2">
-        <div class="btn-top">
-          <span id="name_gpio2">Light 2</span>
-          <span class="edit-icon" onclick="editName('label2', event)">✎</span>
-        </div>
-        <span class="status">OFF</span>
-      </button>
-
-      <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3">
-        <div class="btn-top">
-          <span id="name_gpio3">Fan 1</span>
-          <span class="edit-icon" onclick="editName('label3', event)">✎</span>
-        </div>
-        <span class="status">OFF</span>
-      </button>
-
-      <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4">
-        <div class="btn-top">
-          <span id="name_gpio4">Socket 1</span>
-          <span class="edit-icon" onclick="editName('label4', event)">✎</span>
-        </div>
-        <span class="status">OFF</span>
-      </button>
-      
-      <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5">
-        <div class="btn-top">
-          <span id="name_gpio5">Socket 2</span>
-          <span class="edit-icon" onclick="editName('label5', event)">✎</span>
-        </div>
-        <span class="status">OFF</span>
-      </button>
-
+    <div id="authBox">
+        <input id="emailField" type="email" placeholder="Email Address" />
+        <input id="passwordField" type="password" placeholder="Password" />
+        <button id="loginBtn" class="btn login-btn">Login System</button>
+        <p id="authMsg"></p>
     </div>
 
-    <button id="logoutBtn" class="btn logout-btn">Logout</button>
-  </div>
+    <div id="controlBox" style="display:none;">
+        
+        <div class="button-grid">
+            
+            <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1">
+                <div class="btn-top">
+                    <span id="name_gpio1" class="device-name">Loading...</span>
+                    <span class="edit-icon" onclick="editName('label1', event)">✎</span>
+                </div>
+                <span class="status">OFF</span>
+            </button>
+
+            <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2">
+                <div class="btn-top">
+                    <span id="name_gpio2" class="device-name">Loading...</span>
+                    <span class="edit-icon" onclick="editName('label2', event)">✎</span>
+                </div>
+                <span class="status">OFF</span>
+            </button>
+
+            <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3">
+                <div class="btn-top">
+                    <span id="name_gpio3" class="device-name">Loading...</span>
+                    <span class="edit-icon" onclick="editName('label3', event)">✎</span>
+                </div>
+                <span class="status">OFF</span>
+            </button>
+
+            <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4">
+                <div class="btn-top">
+                    <span id="name_gpio4" class="device-name">Loading...</span>
+                    <span class="edit-icon" onclick="editName('label4', event)">✎</span>
+                </div>
+                <span class="status">OFF</span>
+            </button>
+            
+            <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5">
+                <div class="btn-top">
+                    <span id="name_gpio5" class="device-name">Loading...</span>
+                    <span class="edit-icon" onclick="editName('label5', event)">✎</span>
+                </div>
+                <span class="status">OFF</span>
+            </button>
+
+        </div>
+
+        <button id="logoutBtn" class="btn logout-btn">Logout</button>
+    </div>
+
 </div>
 
 <script type="module" src="app.js"></script>
+
 </body>
 </html>
