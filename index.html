@@ -55,12 +55,12 @@
                 </button>
             </div>
 
-            <div class="master-wrapper">
+            <div class="master-container">
                 <button id="masterBtn" class="gpio-button master-style">
                     <div class="btn-top">
-                        <span class="device-name" style="color: #ff9800;">ALL SWITCH</span>
+                        <span class="device-name" style="color: #ff9800;">MASTER</span>
                     </div>
-                    <span class="status">TOGGLE</span>
+                    <span id="masterStatus" class="status">ALL ON</span>
                 </button>
             </div>
 
@@ -81,6 +81,7 @@
             <button onclick="showControlPage()" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
             <h3>Set Timer</h3>
         </div>
+        
         <div class="add-schedule-form">
             <label>Device</label>
             <select id="schedDeviceSelect">
