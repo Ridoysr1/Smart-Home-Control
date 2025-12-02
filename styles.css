@@ -1,4 +1,4 @@
-/* Base */
+/* Base Reset */
 body, html {
     margin: 0; padding: 0; width: 100%; height: 100%;
     background: #0f0f1a; font-family: "Segoe UI", sans-serif;
@@ -21,28 +21,76 @@ body, html {
 .online { background: rgba(0, 230, 118, 0.2); color: #00e676; border: 1px solid #00e676; }
 .offline { background: rgba(255, 23, 68, 0.2); color: #ff1744; border: 1px solid #ff1744; }
 
-/* Auth */
-.auth-screen { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; padding: 30px; }
-input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: white; text-align: center; font-size: 16px; outline: none; box-sizing: border-box; }
-.btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; background: #4e54c8; color: white; margin-top: 10px; }
-
-/* Control */
+/* Control Screen */
 .control-screen { flex-grow: 1; display: flex; flex-direction: column; padding: 20px; overflow: hidden; }
-.switch-grid-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow-y: auto; margin: 10px 0; }
+
+/* Switch Area */
+.switch-area { 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column;
+    align-items: center; 
+    justify-content: flex-start;
+    overflow-y: auto; 
+    margin-top: 10px;
+    gap: 15px; /* Grid এবং Master Button এর মাঝের গ্যাপ */
+}
+
 .button-grid { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
 
-.gpio-button { background: rgba(255,255,255,0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); color: white; padding: 25px 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; user-select: none; -webkit-user-select: none; }
+/* General Button Style (For both Grid and Master) */
+.gpio-button { 
+    background: rgba(255,255,255,0.08); 
+    border-radius: 16px; 
+    border: 1px solid rgba(255,255,255,0.05); 
+    color: white; 
+    padding: 25px 15px; 
+    cursor: pointer; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px; 
+    transition: 0.2s; 
+    user-select: none; -webkit-user-select: none;
+    width: 100%; /* কন্টেইনারের পুরো জায়গা নেবে */
+    box-sizing: border-box;
+}
 .gpio-button:active { transform: scale(0.96); }
 .gpio-button.on { background: linear-gradient(135deg, #00c853, #69f0ae); color: #003300; border: none; }
+
 .device-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
 .status { font-size: 11px; opacity: 0.7; }
 
-/* Footer */
+/* --- MASTER BUTTON STYLING --- */
+.master-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* মাস্টার বাটনকে গ্রিডের একটি কলামের সমান সাইজ করার ক্যালকুলেশন */
+/* (100% - 15px গ্যাপ) / 2 */
+.master-style {
+    width: calc(50% - 7.5px) !important; 
+    background: rgba(255, 152, 0, 0.15); /* একটু আলাদা আভা (কমলা) */
+    border: 1px solid rgba(255, 152, 0, 0.3);
+}
+.master-style:active {
+    background: rgba(255, 152, 0, 0.3);
+}
+
+/* Footer & Rest */
 .footer-section { flex-shrink: 0; display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
 .footer-btn { background: none; border: none; color: #aaa; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 8px; }
 .footer-btn:hover { color: white; }
 .footer-btn.left { color: #4fc3f7; }
 .footer-btn.right { color: #ff8a80; }
+
+/* Login */
+.auth-screen { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; padding: 30px; }
+input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: white; text-align: center; font-size: 16px; outline: none; box-sizing: border-box; }
+.btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; background: #4e54c8; color: white; margin-top: 10px; }
 
 /* Schedule */
 .schedule-screen { flex-grow: 1; display: flex; flex-direction: column; padding: 20px; }
@@ -57,8 +105,6 @@ input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border:
 .del-btn { background: none; border: none; color: #ff8a80; cursor: pointer; }
 select { background: rgba(255,255,255,0.15); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box; }
 option { background: #333; }
-
-/* Digital Time Box */
 .digital-time-box { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 2px; }
 .digital-time-box select { width: 45% !important; padding: 10px 5px !important; margin: 0 !important; text-align: center; background: transparent; }
 .colon { font-size: 20px; font-weight: bold; color: #aaa; margin-top: -2px; }
