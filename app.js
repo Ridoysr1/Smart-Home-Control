@@ -18,7 +18,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-// UI Elements
 const ui = {
     authBox: document.getElementById("authBox"),
     controlBox: document.getElementById("controlBox"),
@@ -34,27 +33,33 @@ document.getElementById("loginBtn").onclick = async () => {
     try { await signInWithEmailAndPassword(auth, document.getElementById("emailField").value, document.getElementById("passwordField").value); }
     catch (e) { document.getElementById("authMsg").textContent = e.message; }
 };
-document.getElementById("logoutBtn").onclick = () => signOut(auth);
+
+// Logout with Warning
+document.getElementById("logoutBtn").onclick = () => {
+    if(confirm("Are you sure you want to Exit?")) {
+        signOut(auth);
+    }
+};
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
         ui.authBox.style.display = "none";
-        ui.controlBox.style.display = "flex"; // Fixed layout
-        ui.statusBadge.className = "status-dot online";
+        ui.controlBox.style.display = "flex";
+        ui.statusBadge.className = "status-badge online";
+        ui.statusBadge.textContent = "System Online";
         startListeners();
     } else {
-        ui.authBox.style.display = "block";
+        ui.authBox.style.display = "flex";
         ui.controlBox.style.display = "none";
         ui.scheduleBox.style.display = "none";
-        ui.statusBadge.className = "status-dot offline";
+        ui.statusBadge.className = "status-badge offline";
+        ui.statusBadge.textContent = "System Offline";
     }
 });
 
 function startListeners() {
-    for(let i=1; i<=6; i++) { // Loop 6 times
+    for(let i=1; i<=6; i++) {
         const idx = i;
-        
-        // GPIO
         onValue(ref(db, "/gpio" + idx), (snap) => {
             const val = snap.val();
             const btn = document.getElementById("gpio" + idx + "Btn");
@@ -64,23 +69,19 @@ function startListeners() {
                 else { btn.classList.remove("on"); if(txt) txt.textContent="OFF"; }
             }
         });
-
-        // Label
         onValue(ref(db, "/label" + idx), (snap) => {
             if(snap.val()) {
                 deviceNames[idx-1] = snap.val();
-                document.getElementById("name_gpio" + idx).textContent = snap.val();
+                const el = document.getElementById("name_gpio" + idx);
+                if(el) el.textContent = snap.val();
                 updateDropdown();
                 renderList();
             }
         });
-
-        // Timer
         onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn"+idx] = snap.val(); renderList(); });
         onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff"+idx] = snap.val(); renderList(); });
     }
 
-    // Button Logic
     document.querySelectorAll(".gpio-button").forEach((btn) => {
         let isLong = false;
         const start = () => { isLong = false; pressTimer = setTimeout(() => { isLong = true; editName(btn.dataset.label); }, 800); };
@@ -99,19 +100,32 @@ function startListeners() {
     });
 }
 
+// Populate Digital Time Selectors
+function populateTimeSelects() {
+    const h = document.getElementById("schedHour");
+    const m = document.getElementById("schedMinute");
+    for(let i=0; i<24; i++) { let o=document.createElement("option"); let v=i<10?"0"+i:i; o.value=v; o.text=v; h.add(o); }
+    for(let i=0; i<60; i++) { let o=document.createElement("option"); let v=i<10?"0"+i:i; o.value=v; o.text=v; m.add(o); }
+}
+window.addEventListener('load', populateTimeSelects);
+
 function updateDropdown() {
     const s = document.getElementById("schedDeviceSelect");
+    const curr = s.value;
     s.innerHTML = "";
     deviceNames.forEach((n, i) => { let o = document.createElement("option"); o.value = i+1; o.text = n; s.add(o); });
+    s.value = curr;
 }
 
 function renderList() {
     const c = document.getElementById("scheduleListContainer");
     c.innerHTML = "";
+    let has = false;
     for(let i=1; i<=6; i++) {
-        if(activeTimers["timeOn"+i]) addItem(c, i, "On", activeTimers["timeOn"+i]);
-        if(activeTimers["timeOff"+i]) addItem(c, i, "Off", activeTimers["timeOff"+i]);
+        if(activeTimers["timeOn"+i]) { addItem(c, i, "On", activeTimers["timeOn"+i]); has=true; }
+        if(activeTimers["timeOff"+i]) { addItem(c, i, "Off", activeTimers["timeOff"+i]); has=true; }
     }
+    if(!has) c.innerHTML = "<div style='color:#aaa;text-align:center;margin-top:20px'>No timers set</div>";
 }
 
 function addItem(c, i, act, time) {
@@ -123,10 +137,14 @@ function addItem(c, i, act, time) {
 }
 
 window.editName = (k) => { let n = prompt("Name:"); if(n) set(ref(db, "/"+k), n); };
+
+// New Add Schedule with Digital Time
 window.addNewSchedule = () => {
     let d = document.getElementById("schedDeviceSelect").value;
     let a = document.getElementById("schedActionSelect").value;
-    let t = document.getElementById("schedTimeInput").value;
+    let hh = document.getElementById("schedHour").value;
+    let mm = document.getElementById("schedMinute").value;
+    let t = hh + ":" + mm;
     if(t) set(ref(db, "/time"+a+d), t);
 };
 window.delT = (i, a) => set(ref(db, "/time"+a+i), "");
