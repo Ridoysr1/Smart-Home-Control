@@ -1,103 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Smart Home</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-
-<div class="card full-screen">
+<div id="scheduleBox" class="schedule-screen" style="display:none;">
+    <div class="header-row">
+        <button onclick="showControlPage()" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+        <h3>Timers</h3>
+    </div>
     
-    <div class="app-header">
-        <h1>My Home</h1>
-        <div id="statusBadge" class="status-dot offline"></div>
-    </div>
+    <div class="add-schedule-form">
+        <label>Select Switch</label>
+        <select id="schedDeviceSelect">
+            <option value="1">Switch 1</option>
+            <option value="2">Switch 2</option>
+            <option value="3">Switch 3</option>
+            <option value="4">Switch 4</option>
+            <option value="5">Switch 5</option>
+            <option value="6">Switch 6</option>
+        </select>
 
-    <div id="authBox" class="center-box">
-        <h2>Welcome Back</h2>
-        <input id="emailField" type="email" placeholder="Email" />
-        <input id="passwordField" type="password" placeholder="Password" />
-        <button id="loginBtn" class="btn login-btn">Sign In</button>
-        <p id="authMsg"></p>
-    </div>
+        <div class="row-inputs">
+            <div class="half">
+                <label>Action</label>
+                <select id="schedActionSelect">
+                    <option value="On">Turn ON</option>
+                    <option value="Off">Turn OFF</option>
+                </select>
+            </div>
 
-    <div id="controlBox" style="display:none;">
-        <div class="button-grid">
-            <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1" data-label="label1">
-                <i class="fas fa-lightbulb icon-lg"></i>
-                <span id="name_gpio1" class="device-name">...</span>
-                <span class="status">OFF</span>
-            </button>
-            <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2" data-label="label2">
-                <i class="fas fa-lightbulb icon-lg"></i>
-                <span id="name_gpio2" class="device-name">...</span>
-                <span class="status">OFF</span>
-            </button>
-            <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3" data-label="label3">
-                <i class="fas fa-fan icon-lg"></i>
-                <span id="name_gpio3" class="device-name">...</span>
-                <span class="status">OFF</span>
-            </button>
-            <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4" data-label="label4">
-                <i class="fas fa-plug icon-lg"></i>
-                <span id="name_gpio4" class="device-name">...</span>
-                <span class="status">OFF</span>
-            </button>
-            <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5" data-label="label5">
-                <i class="fas fa-tv icon-lg"></i>
-                <span id="name_gpio5" class="device-name">...</span>
-                <span class="status">OFF</span>
-            </button>
-            <button id="gpio6Btn" class="gpio-button" data-gpio="gpio6" data-label="label6">
-                <i class="fas fa-power-off icon-lg"></i>
-                <span id="name_gpio6" class="device-name">...</span>
-                <span class="status">OFF</span>
-            </button>
+            <div class="half">
+                <label>Time (HH : MM)</label>
+                <div class="digital-time-box">
+                    <select id="schedHour"></select>
+                    <span class="colon">:</span>
+                    <select id="schedMinute"></select>
+                </div>
+            </div>
         </div>
         
-        <div class="bottom-nav">
-            <button onclick="showSchedulePage()" class="nav-btn"><i class="fas fa-clock"></i> Timers</button>
-            <button id="logoutBtn" class="nav-btn logout"><i class="fas fa-sign-out-alt"></i> Exit</button>
-        </div>
+        <button onclick="addNewSchedule()" class="btn add-btn">Set Timer</button>
     </div>
 
-    <div id="scheduleBox" style="display:none;">
-        <div class="header-row">
-            <button onclick="showControlPage()" class="back-btn"><i class="fas fa-arrow-left"></i></button>
-            <h3>Manage Timers</h3>
-        </div>
-
-        <div class="add-schedule-form">
-            <select id="schedDeviceSelect">
-                <option value="1">Switch 1</option>
-                <option value="2">Switch 2</option>
-                <option value="3">Switch 3</option>
-                <option value="4">Switch 4</option>
-                <option value="5">Switch 5</option>
-                <option value="6">Switch 6</option>
-            </select>
-            <div class="row-inputs">
-                <select id="schedActionSelect" class="half">
-                    <option value="On">ON</option>
-                    <option value="Off">OFF</option>
-                </select>
-                <input type="time" id="schedTimeInput" class="half">
-            </div>
-            <button onclick="addNewSchedule()" class="btn add-btn">Set Timer</button>
-        </div>
-
-        <div id="scheduleListContainer" class="schedule-list"></div>
-    </div>
-
+    <div id="scheduleListContainer" class="schedule-list"></div>
 </div>
-
-<script type="module" src="app.js"></script>
-<script>
-    window.showSchedulePage = () => { document.getElementById('controlBox').style.display='none'; document.getElementById('scheduleBox').style.display='block'; }
-    window.showControlPage = () => { document.getElementById('scheduleBox').style.display='none'; document.getElementById('controlBox').style.display='block'; }
-</script>
-</body>
-</html>
