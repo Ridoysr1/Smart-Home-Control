@@ -13,7 +13,7 @@
     
     <div class="header-section">
         <h1>My Home</h1>
-        <div id="statusBadge" class="status-badge offline">Offline</div>
+        <div id="statusBadge" class="status-badge offline">System Offline</div>
     </div>
 
     <div id="authBox" class="auth-screen">
@@ -26,7 +26,8 @@
 
     <div id="controlBox" class="control-screen" style="display:none;">
         
-        <div class="switch-grid-container">
+        <div class="switch-area">
+            
             <div class="button-grid">
                 <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1" data-label="label1">
                     <div class="btn-top"><span id="name_gpio1" class="device-name">...</span></div>
@@ -53,13 +54,22 @@
                     <span class="status">OFF</span>
                 </button>
             </div>
+
+            <div class="master-wrapper">
+                <button id="masterBtn" class="gpio-button master-style">
+                    <div class="btn-top">
+                        <span class="device-name" style="color: #ff9800;">ALL SWITCH</span>
+                    </div>
+                    <span class="status">TOGGLE</span>
+                </button>
+            </div>
+
         </div>
 
         <div class="footer-section">
             <button onclick="showSchedulePage()" class="footer-btn left">
                 <i class="fas fa-clock"></i> Timer
             </button>
-            
             <button id="logoutBtn" class="footer-btn right">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </button>
@@ -71,7 +81,6 @@
             <button onclick="showControlPage()" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
             <h3>Set Timer</h3>
         </div>
-        
         <div class="add-schedule-form">
             <label>Device</label>
             <select id="schedDeviceSelect">
@@ -82,22 +91,15 @@
                 <option value="5">Switch 5</option>
                 <option value="6">Switch 6</option>
             </select>
-
             <div class="row-inputs">
                 <div class="half">
                     <label>Action</label>
-                    <select id="schedActionSelect">
-                        <option value="On">ON</option>
-                        <option value="Off">OFF</option>
-                    </select>
+                    <select id="schedActionSelect"><option value="On">ON</option><option value="Off">OFF</option></select>
                 </div>
-                
                 <div class="half">
                     <label>Time (HH:MM)</label>
                     <div class="digital-time-box">
-                        <select id="schedHour"></select>
-                        <span class="colon">:</span>
-                        <select id="schedMinute"></select>
+                        <select id="schedHour"></select><span class="colon">:</span><select id="schedMinute"></select>
                     </div>
                 </div>
             </div>
@@ -105,7 +107,6 @@
         </div>
         <div id="scheduleListContainer" class="schedule-list"></div>
     </div>
-
 </div>
 
 <script type="module" src="app.js"></script>
