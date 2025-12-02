@@ -1,3 +1,4 @@
+/* --- Base CSS (আগের অংশ ঠিক থাকবে) --- */
 body {
     margin: 0; padding: 0;
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -12,18 +13,17 @@ body {
     box-shadow: 0 10px 45px rgba(0,0,0,0.25); text-align: center;
 }
 h1 { margin-bottom: 5px; font-size: 24px; }
-.status-badge {
-    display: inline-block; padding: 5px 12px; border-radius: 50px;
-    font-size: 11px; margin-bottom: 15px; font-weight: 600;
-}
+.status-badge { display: inline-block; padding: 5px 12px; border-radius: 50px; font-size: 11px; margin-bottom: 15px; font-weight: 600; }
 .online { background: #00e676; color: #000; }
 .offline { background: #ff1744; color: #fff; }
 
-input {
+input, select {
     width: 90%; padding: 12px; margin: 8px 0; border-radius: 10px;
     border: none; outline: none; background: rgba(255,255,255,0.15);
-    color: white; text-align: center;
+    color: white; text-align: center; font-family: inherit;
 }
+option { background: #333; color: white; }
+
 .btn {
     width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px;
     border: none; cursor: pointer; color: white; font-weight: 600;
@@ -32,10 +32,7 @@ input {
 .logout-btn { background: linear-gradient(135deg, #ff5252, #d32f2f); margin-top: 15px; }
 
 /* Grid */
-.button-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 12px; margin-top: 10px;
-}
+.button-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 10px; }
 .gpio-button {
     width: 100%; padding: 15px 10px; border-radius: 12px;
     background: linear-gradient(135deg, #2a3b55, #1e2a3d);
@@ -43,28 +40,52 @@ input {
     color: white; display: flex; flex-direction: column; 
     align-items: center; gap: 6px; transition: 0.3s;
 }
-.gpio-button.on {
-    background: linear-gradient(135deg, #00c853, #69f0ae);
-    color: #003300; border: none;
-}
+.gpio-button.on { background: linear-gradient(135deg, #00c853, #69f0ae); color: #003300; border: none; }
 .btn-top { display: flex; justify-content: center; align-items: center; gap: 5px; width: 100%; }
 .device-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; font-size: 14px; }
 .edit-icon { opacity: 0.5; padding: 2px; font-size: 12px; cursor: pointer; }
 .status { font-size: 11px; opacity: 0.8; }
 
-/* Schedule Page */
+/* --- NEW SCHEDULE STYLES --- */
 .nav-area { margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
 .nav-btn { background: linear-gradient(135deg, #667eea, #764ba2); }
 
 .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .back-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
 
-.schedule-card {
-    background: rgba(255,255,255,0.08); border-radius: 10px;
-    padding: 12px; margin-bottom: 10px; text-align: left;
+/* Add Form */
+.add-schedule-form {
+    background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;
+    text-align: left;
 }
-.sched-name { font-weight: bold; color: #4fc3f7; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-.timer-inputs { display: flex; justify-content: space-between; gap: 10px; }
-.time-group { width: 48%; }
-.time-group label { font-size: 11px; color: #aaa; }
-input[type="time"] { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 6px; }
+.add-schedule-form label { font-size: 12px; color: #aaa; margin-left: 5px; }
+.add-schedule-form select, .add-schedule-form input { width: 100%; box-sizing: border-box; margin-top: 5px; margin-bottom: 10px; text-align: left; padding-left: 10px; }
+
+.row-inputs { display: flex; gap: 10px; }
+.half-box { width: 50%; }
+
+.add-btn { margin-top: 5px; background: linear-gradient(135deg, #00c853, #009624); }
+
+.divider { margin: 20px 0 10px 0; font-size: 14px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+
+/* List Items */
+.schedule-item {
+    background: rgba(255,255,255,0.1); border-radius: 10px;
+    padding: 12px; margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-left: 4px solid #03a9f4;
+}
+.item-info { text-align: left; }
+.item-name { font-weight: bold; font-size: 15px; color: white; }
+.item-action { font-size: 13px; color: #ddd; margin-top: 2px; }
+.on-text { color: #69f0ae; font-weight: bold; }
+.off-text { color: #ff8a80; font-weight: bold; }
+
+.delete-btn {
+    background: rgba(255, 0, 0, 0.2); border: none; color: #ff8a80;
+    width: 30px; height: 30px; border-radius: 50%;
+    cursor: pointer; display: flex; justify-content: center; align-items: center;
+    transition: 0.2s;
+}
+.delete-btn:hover { background: rgba(255, 0, 0, 0.4); color: white; }
+.empty-msg { color: #aaa; font-style: italic; margin-top: 20px; }
