@@ -1,17 +1,8 @@
 /* Base */
-body, html {
-    margin: 0; padding: 0; width: 100%; height: 100%;
-    background: #0f0f1a; font-family: "Segoe UI", sans-serif;
-    color: white; display: flex; justify-content: center; align-items: center;
-}
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #0f0f1a; font-family: "Segoe UI", sans-serif; color: white; display: flex; justify-content: center; align-items: center; }
 
 /* App Container */
-.app-container {
-    width: 100%; max-width: 400px; height: 100%; max-height: 850px;
-    background: linear-gradient(180deg, #1e1e2e 0%, #121212 100%);
-    display: flex; flex-direction: column; position: relative;
-    box-shadow: 0 0 50px rgba(0,0,0,0.5); overflow: hidden;
-}
+.app-container { width: 100%; max-width: 400px; height: 100%; max-height: 850px; background: linear-gradient(180deg, #1e1e2e 0%, #121212 100%); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5); overflow: hidden; }
 @media (max-width: 480px) { .app-container { max-width: 100%; max-height: 100%; } }
 
 /* Header */
@@ -20,6 +11,11 @@ body, html {
 .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 12px; margin-top: 8px; font-weight: bold; text-transform: uppercase; }
 .online { background: rgba(0, 230, 118, 0.2); color: #00e676; border: 1px solid #00e676; }
 .offline { background: rgba(255, 23, 68, 0.2); color: #ff1744; border: 1px solid #ff1744; }
+
+/* Auth */
+.auth-screen { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; padding: 30px; }
+input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: white; text-align: center; font-size: 16px; outline: none; box-sizing: border-box; }
+.btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; background: #4e54c8; color: white; margin-top: 10px; }
 
 /* Control Screen */
 .control-screen { flex-grow: 1; display: flex; flex-direction: column; padding: 20px; overflow: hidden; }
@@ -45,9 +41,8 @@ body, html {
 .footer-btn.left { color: #4fc3f7; }
 .footer-btn.right { color: #ff8a80; }
 
-/* Login & Schedule */
-.auth-screen, .schedule-screen { flex-grow: 1; display: flex; flex-direction: column; padding: 20px; }
-.auth-screen { justify-content: center; }
+/* Schedule */
+.schedule-screen { flex-grow: 1; display: flex; flex-direction: column; padding: 20px; }
 .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .back-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
 .add-schedule-form { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; }
@@ -57,19 +52,25 @@ body, html {
 .schedule-list { margin-top: 20px; overflow-y: auto; }
 .schedule-item { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #03a9f4; }
 .del-btn { background: none; border: none; color: #ff8a80; cursor: pointer; }
-
-/* Inputs */
-input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: white; text-align: center; font-size: 16px; outline: none; box-sizing: border-box; }
 select { background: rgba(255,255,255,0.15); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box; }
 option { background: #333; }
 
-/* Digital Time Box (AM/PM Style) */
+/* Digital Time Box */
 .digital-time-box { display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 2px; }
-.digital-time-box select { padding: 10px 2px !important; margin: 0 !important; text-align: center; background: transparent; font-size: 14px; }
-/* Hour & Minute Width */
-#schedHour, #schedMinute { width: 35% !important; }
-/* AM/PM Width */
-#schedAmPm { width: 30% !important; font-size: 12px; font-weight: bold; color: #4fc3f7; }
-
+.digital-time-box select { width: 33% !important; padding: 10px 2px !important; margin: 0 !important; text-align: center; background: transparent; font-size: 14px; }
+#schedAmPm { color: #4fc3f7; font-weight: bold; }
 .colon { font-size: 18px; font-weight: bold; color: #aaa; margin-top: -2px; }
 label { font-size: 12px; color: #aaa; margin-bottom: 2px; display: block; }
+
+/* Premium Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s; }
+.modal-overlay.active { opacity: 1; pointer-events: all; }
+.modal-box { background: linear-gradient(135deg, #2a2a35, #1e1e2e); padding: 30px; border-radius: 20px; width: 300px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); transform: scale(0.8); transition: 0.3s; }
+.modal-overlay.active .modal-box { transform: scale(1); }
+.modal-icon { font-size: 40px; color: #ff9800; margin-bottom: 15px; }
+.modal-box h3 { margin: 0 0 10px 0; font-size: 20px; }
+.modal-box p { color: #aaa; font-size: 14px; margin-bottom: 25px; }
+.modal-actions { display: flex; gap: 10px; }
+.modal-btn { padding: 10px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; flex: 1; }
+.cancel { background: rgba(255,255,255,0.1); color: white; }
+.confirm { background: linear-gradient(135deg, #ff5252, #d32f2f); color: white; }
