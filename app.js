@@ -2,15 +2,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDxkigmr_aFKfkcA40tYxkJ7uNFxtmg34s",
-  authDomain: "smart-home-control-85131.firebaseapp.com",
-  databaseURL: "https://smart-home-control-85131-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "smart-home-control-85131",
-  storageBucket: "smart-home-control-85131.firebasestorage.app",
-  messagingSenderId: "1088125775954",
-  appId: "1:1088125775954:web:743b9899cbcb7011966f8b"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -26,20 +25,23 @@ const ui = {
 
 let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
 let activeTimers = {};
-let lastSeenTime = 0; // শেষ কখন বোর্ড অনলাইন ছিল
+let lastSeenTime = 0;
 
+// Login Logic
 document.getElementById("loginBtn").onclick = async () => {
     try { await signInWithEmailAndPassword(auth, document.getElementById("emailField").value, document.getElementById("passwordField").value); }
     catch (e) { document.getElementById("authMsg").textContent = e.message; }
 };
 
+// Logout with Custom Dialog
 document.getElementById("logoutBtn").onclick = () => {
     showDialog("Exit System?", "Are you sure you want to log out?", () => signOut(auth));
 };
 
-// Master Button
+// Master Button Logic
 const masterBtn = document.getElementById("masterBtn");
 const masterStatus = document.getElementById("masterStatus");
+
 masterBtn.onclick = () => {
     let anyOn = false;
     for(let i=1; i<=6; i++) {
@@ -48,6 +50,7 @@ masterBtn.onclick = () => {
     }
     const actionText = anyOn ? "Turn ALL OFF" : "Turn ALL ON";
     const newState = anyOn ? 0 : 1;
+    
     showDialog("Master Control", `Are you sure you want to ${actionText}?`, () => {
         for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), newState);
     });
@@ -62,24 +65,30 @@ function updateMasterButton() {
     masterStatus.textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
-// Dialog Logic
+// --- PREMIUM DIALOG LOGIC ---
 const modal = document.getElementById("customModal");
 const modalTitle = document.getElementById("modalTitle");
 const modalMessage = document.getElementById("modalMessage");
 const btnConfirm = document.getElementById("btnConfirm");
 const btnCancel = document.getElementById("btnCancel");
 let onConfirmAction = null;
+
 function showDialog(title, msg, callback) {
-    modalTitle.textContent = title; modalMessage.textContent = msg; onConfirmAction = callback; modal.classList.add("active");
+    modalTitle.textContent = title;
+    modalMessage.textContent = msg;
+    onConfirmAction = callback;
+    modal.classList.add("active");
 }
 function closeDialog() { modal.classList.remove("active"); onConfirmAction = null; }
-btnCancel.onclick = closeDialog; btnConfirm.onclick = () => { if(onConfirmAction) onConfirmAction(); closeDialog(); };
+btnCancel.onclick = closeDialog;
+btnConfirm.onclick = () => { if(onConfirmAction) onConfirmAction(); closeDialog(); };
 
+// Auth Listener
 onAuthStateChanged(auth, (user) => {
     if (user) {
         ui.authBox.style.display = "none";
         ui.controlBox.style.display = "flex";
-        ui.statusBadge.textContent = "Connecting..."; // শুরুতে কানেক্টিং দেখাবে
+        ui.statusBadge.textContent = "Connecting...";
         startListeners();
     } else {
         ui.authBox.style.display = "flex";
@@ -89,23 +98,20 @@ onAuthStateChanged(auth, (user) => {
 });
 
 function startListeners() {
-    // --- ১. হার্টবিট লিসেনার (বোর্ড অনলাইন/অফলাইন চেক) ---
+    // Heartbeat
     onValue(ref(db, "/lastSeen"), (snap) => {
-        // ডেটাবেস থেকে আপডেট আসলে টাইম আপডেট হবে
         lastSeenTime = Date.now();
         ui.statusBadge.className = "status-badge online";
         ui.statusBadge.textContent = "System Online";
     });
-
-    // প্রতি ১ সেকেন্ডে চেক করবে শেষ আপডেট কতক্ষণ আগে এসেছে
     setInterval(() => {
-        if (Date.now() - lastSeenTime > 15000) { // ১৫ সেকেন্ড টাইমআউট
+        if (Date.now() - lastSeenTime > 15000) {
             ui.statusBadge.className = "status-badge offline";
             ui.statusBadge.textContent = "System Offline";
         }
     }, 1000);
 
-    // --- ২. বাকি লিসেনার ---
+    // GPIO & Timer Listeners
     for(let i=1; i<=6; i++) {
         const idx = i;
         onValue(ref(db, "/gpio" + idx), (snap) => {
@@ -130,20 +136,63 @@ function startListeners() {
         onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff"+idx] = snap.val(); renderList(); });
     }
 
+    // --- FIXED BUTTON LOGIC (Long Press vs Click) ---
     document.querySelectorAll(".gpio-button:not(.master-style)").forEach((btn) => {
-        let isLong = false;
-        const start = () => { isLong = false; pressTimer = setTimeout(() => { isLong = true; editName(btn.dataset.label); }, 800); };
-        const end = () => clearTimeout(pressTimer);
-        btn.addEventListener("mousedown", start); btn.addEventListener("touchstart", start);
-        btn.addEventListener("mouseup", end); btn.addEventListener("touchend", end);
-        btn.addEventListener("click", () => {
-            if(!isLong) {
-                const key = btn.dataset.gpio;
-                const newState = btn.classList.contains("on") ? 0 : 1;
-                set(ref(db, "/" + key), newState);
+        let pressTimer = null;
+        let isLongPress = false;
+
+        // প্রেস শুরু (Touch/Mouse)
+        const startPress = (e) => {
+            // শুধুমাত্র লেফট ক্লিক বা টাচ
+            if (e.type === 'mousedown' && e.button !== 0) return;
+            
+            isLongPress = false;
+            pressTimer = setTimeout(() => {
+                isLongPress = true;
+                // লং প্রেস ডিটেক্ট হলে ভাইব্রেশন হবে (মোবাইলে)
+                if (navigator.vibrate) navigator.vibrate(50);
+                editName(btn.dataset.label);
+            }, 800); // ৮০০ মিলিসেকেন্ড চাপলে লং প্রেস হবে
+        };
+
+        // প্রেস শেষ বা বাতিল
+        const cancelPress = (e) => {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
             }
+        };
+
+        // ক্লিক অ্যাকশন
+        const handleClick = (e) => {
+            // যদি লং প্রেস হয়ে থাকে, তাহলে ক্লিক কাজ করবে না
+            if (isLongPress) {
+                e.preventDefault();
+                isLongPress = false; // রিসেট
+                return;
+            }
+            
+            // সাধারণ ক্লিক (অন/অফ)
+            const key = btn.dataset.gpio;
+            const newState = btn.classList.contains("on") ? 0 : 1;
+            set(ref(db, "/" + key), newState);
+        };
+
+        // ইভেন্ট লিসেনার যোগ করা
+        btn.addEventListener("mousedown", startPress);
+        btn.addEventListener("touchstart", startPress, {passive: true});
+
+        btn.addEventListener("mouseup", cancelPress);
+        btn.addEventListener("mouseleave", cancelPress);
+        btn.addEventListener("touchend", cancelPress);
+        
+        btn.addEventListener("click", handleClick);
+        
+        // রাইট ক্লিক মেনু বন্ধ করা
+        btn.addEventListener("contextmenu", e => {
+            e.preventDefault();
+            return false;
         });
-        btn.addEventListener("contextmenu", e => e.preventDefault());
     });
 }
 
@@ -168,8 +217,7 @@ function formatTime12(time24) {
     let [H, M] = time24.split(":");
     H = parseInt(H);
     let ampm = H >= 12 ? "PM" : "AM";
-    H = H % 12;
-    H = H ? H : 12; 
+    H = H % 12; H = H ? H : 12; 
     let H_str = H < 10 ? "0" + H : H;
     return `${H_str}:${M} ${ampm}`;
 }
@@ -193,7 +241,13 @@ function addItem(c, i, act, time) {
     </div>`;
 }
 
-window.editName = (k) => { let n = prompt("Name:"); if(n) set(ref(db, "/"+k), n); };
+window.editName = (k) => { 
+    // ছোট একটি ডিলে দিয়ে প্রম্পট ওপেন করা যাতে ক্লিক ইভেন্ট শেষ হতে পারে
+    setTimeout(() => {
+        let n = prompt("Enter new name:"); 
+        if(n) set(ref(db, "/"+k), n); 
+    }, 10);
+};
 
 window.addNewSchedule = () => {
     let d = document.getElementById("schedDeviceSelect").value;
