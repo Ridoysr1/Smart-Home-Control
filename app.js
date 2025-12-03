@@ -13,7 +13,6 @@ const firebaseConfig = {
   appId: "1:1088125775954:web:743b9899cbcb7011966f8b"
 };
 
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
@@ -27,7 +26,7 @@ const ui = {
 
 let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
 let activeTimers = {};
-let pressTimer;
+let lastSeenTime = 0; // শেষ কখন বোর্ড অনলাইন ছিল
 
 document.getElementById("loginBtn").onclick = async () => {
     try { await signInWithEmailAndPassword(auth, document.getElementById("emailField").value, document.getElementById("passwordField").value); }
@@ -35,14 +34,12 @@ document.getElementById("loginBtn").onclick = async () => {
 };
 
 document.getElementById("logoutBtn").onclick = () => {
-    if(confirm("Are you sure you want to Exit?")) {
-        signOut(auth);
-    }
+    showDialog("Exit System?", "Are you sure you want to log out?", () => signOut(auth));
 };
 
+// Master Button
 const masterBtn = document.getElementById("masterBtn");
 const masterStatus = document.getElementById("masterStatus");
-
 masterBtn.onclick = () => {
     let anyOn = false;
     for(let i=1; i<=6; i++) {
@@ -51,9 +48,9 @@ masterBtn.onclick = () => {
     }
     const actionText = anyOn ? "Turn ALL OFF" : "Turn ALL ON";
     const newState = anyOn ? 0 : 1;
-    if (confirm(`Are you sure you want to ${actionText}?`)) {
+    showDialog("Master Control", `Are you sure you want to ${actionText}?`, () => {
         for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), newState);
-    }
+    });
 };
 
 function updateMasterButton() {
@@ -65,23 +62,50 @@ function updateMasterButton() {
     masterStatus.textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
+// Dialog Logic
+const modal = document.getElementById("customModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalMessage = document.getElementById("modalMessage");
+const btnConfirm = document.getElementById("btnConfirm");
+const btnCancel = document.getElementById("btnCancel");
+let onConfirmAction = null;
+function showDialog(title, msg, callback) {
+    modalTitle.textContent = title; modalMessage.textContent = msg; onConfirmAction = callback; modal.classList.add("active");
+}
+function closeDialog() { modal.classList.remove("active"); onConfirmAction = null; }
+btnCancel.onclick = closeDialog; btnConfirm.onclick = () => { if(onConfirmAction) onConfirmAction(); closeDialog(); };
+
 onAuthStateChanged(auth, (user) => {
     if (user) {
         ui.authBox.style.display = "none";
         ui.controlBox.style.display = "flex";
-        ui.statusBadge.className = "status-badge online";
-        ui.statusBadge.textContent = "System Online";
+        ui.statusBadge.textContent = "Connecting..."; // শুরুতে কানেক্টিং দেখাবে
         startListeners();
     } else {
         ui.authBox.style.display = "flex";
         ui.controlBox.style.display = "none";
         ui.scheduleBox.style.display = "none";
-        ui.statusBadge.className = "status-badge offline";
-        ui.statusBadge.textContent = "System Offline";
     }
 });
 
 function startListeners() {
+    // --- ১. হার্টবিট লিসেনার (বোর্ড অনলাইন/অফলাইন চেক) ---
+    onValue(ref(db, "/lastSeen"), (snap) => {
+        // ডেটাবেস থেকে আপডেট আসলে টাইম আপডেট হবে
+        lastSeenTime = Date.now();
+        ui.statusBadge.className = "status-badge online";
+        ui.statusBadge.textContent = "System Online";
+    });
+
+    // প্রতি ১ সেকেন্ডে চেক করবে শেষ আপডেট কতক্ষণ আগে এসেছে
+    setInterval(() => {
+        if (Date.now() - lastSeenTime > 15000) { // ১৫ সেকেন্ড টাইমআউট
+            ui.statusBadge.className = "status-badge offline";
+            ui.statusBadge.textContent = "System Offline";
+        }
+    }, 1000);
+
+    // --- ২. বাকি লিসেনার ---
     for(let i=1; i<=6; i++) {
         const idx = i;
         onValue(ref(db, "/gpio" + idx), (snap) => {
@@ -94,12 +118,10 @@ function startListeners() {
             }
             updateMasterButton();
         });
-        
         onValue(ref(db, "/label" + idx), (snap) => {
             if(snap.val()) {
                 deviceNames[idx-1] = snap.val();
-                const el = document.getElementById("name_gpio" + idx);
-                if(el) el.textContent = snap.val();
+                document.getElementById("name_gpio" + idx).textContent = snap.val();
                 updateDropdown();
                 renderList();
             }
@@ -112,7 +134,6 @@ function startListeners() {
         let isLong = false;
         const start = () => { isLong = false; pressTimer = setTimeout(() => { isLong = true; editName(btn.dataset.label); }, 800); };
         const end = () => clearTimeout(pressTimer);
-        
         btn.addEventListener("mousedown", start); btn.addEventListener("touchstart", start);
         btn.addEventListener("mouseup", end); btn.addEventListener("touchend", end);
         btn.addEventListener("click", () => {
@@ -126,23 +147,11 @@ function startListeners() {
     });
 }
 
-// 12-Hour Dropdown Population
 function populateTimeSelects() {
     const h = document.getElementById("schedHour");
     const m = document.getElementById("schedMinute");
-    
-    // Hours 01-12
-    for(let i=1; i<=12; i++) { 
-        let val = i < 10 ? "0" + i : i; 
-        let o = document.createElement("option"); 
-        o.value = val; o.text = val; h.add(o); 
-    }
-    // Minutes 00-59
-    for(let i=0; i<60; i++) { 
-        let val = i < 10 ? "0" + i : i; 
-        let o = document.createElement("option"); 
-        o.value = val; o.text = val; m.add(o); 
-    }
+    for(let i=1; i<=12; i++) { let v=i<10?"0"+i:i; let o=document.createElement("option"); o.value=v; o.text=v; h.add(o); }
+    for(let i=0; i<60; i++) { let v=i<10?"0"+i:i; let o=document.createElement("option"); o.value=v; o.text=v; m.add(o); }
 }
 window.addEventListener('load', populateTimeSelects);
 
@@ -154,14 +163,13 @@ function updateDropdown() {
     s.value = curr;
 }
 
-// Helper: Convert 24h (from DB) to 12h (for UI)
 function formatTime12(time24) {
     if(!time24) return "";
     let [H, M] = time24.split(":");
     H = parseInt(H);
     let ampm = H >= 12 ? "PM" : "AM";
     H = H % 12;
-    H = H ? H : 12; // 0 should be 12
+    H = H ? H : 12; 
     let H_str = H < 10 ? "0" + H : H;
     return `${H_str}:${M} ${ampm}`;
 }
@@ -171,15 +179,8 @@ function renderList() {
     c.innerHTML = "";
     let has = false;
     for(let i=1; i<=6; i++) {
-        if(activeTimers["timeOn"+i]) { 
-            // Display formatted 12h time
-            addItem(c, i, "On", formatTime12(activeTimers["timeOn"+i])); 
-            has=true; 
-        }
-        if(activeTimers["timeOff"+i]) { 
-            addItem(c, i, "Off", formatTime12(activeTimers["timeOff"+i])); 
-            has=true; 
-        }
+        if(activeTimers["timeOn"+i]) { addItem(c, i, "On", formatTime12(activeTimers["timeOn"+i])); has=true; }
+        if(activeTimers["timeOff"+i]) { addItem(c, i, "Off", formatTime12(activeTimers["timeOff"+i])); has=true; }
     }
     if(!has) c.innerHTML = "<div style='color:#aaa;text-align:center;margin-top:20px'>No timers set</div>";
 }
@@ -194,23 +195,17 @@ function addItem(c, i, act, time) {
 
 window.editName = (k) => { let n = prompt("Name:"); if(n) set(ref(db, "/"+k), n); };
 
-// Add Schedule: Convert 12h (UI) -> 24h (DB)
 window.addNewSchedule = () => {
     let d = document.getElementById("schedDeviceSelect").value;
     let a = document.getElementById("schedActionSelect").value;
     let hh = document.getElementById("schedHour").value;
     let mm = document.getElementById("schedMinute").value;
     let ampm = document.getElementById("schedAmPm").value;
-
-    // Logic to convert to 24 Hour format for ESP32
     let h = parseInt(hh);
     if(ampm === "PM" && h < 12) h = h + 12;
     if(ampm === "AM" && h === 12) h = 0;
-    
-    // Format to HH:MM (Example: 08:30 or 20:30)
     let h_str = h < 10 ? "0" + h : h;
     let t = h_str + ":" + mm;
-
     if(t) set(ref(db, "/time"+a+d), t);
 };
 window.delT = (i, a) => set(ref(db, "/time"+a+i), "");
