@@ -100,15 +100,11 @@
                 </div>
                 
                 <div class="half">
-                    <label>Time (HH:MM AM/PM)</label>
+                    <label>Time</label>
                     <div class="digital-time-box">
-                        <select id="schedHour"></select>
-                        <span class="colon">:</span>
+                        <select id="schedHour"></select><span class="colon">:</span>
                         <select id="schedMinute"></select>
-                        <select id="schedAmPm">
-                            <option value="AM">AM</option>
-                            <option value="PM">PM</option>
-                        </select>
+                        <select id="schedAmPm"><option value="AM">AM</option><option value="PM">PM</option></select>
                     </div>
                 </div>
             </div>
@@ -116,6 +112,19 @@
         </div>
         <div id="scheduleListContainer" class="schedule-list"></div>
     </div>
+
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-box">
+            <i class="fas fa-exclamation-circle modal-icon"></i>
+            <h3 id="modalTitle">Confirm</h3>
+            <p id="modalMessage">Are you sure?</p>
+            <div class="modal-actions">
+                <button id="btnCancel" class="modal-btn cancel">Cancel</button>
+                <button id="btnConfirm" class="modal-btn confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script type="module" src="app.js"></script>
