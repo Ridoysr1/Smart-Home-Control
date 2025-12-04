@@ -22,27 +22,65 @@ let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
 let activeTimers = {};
 let lastSeenTime = 0;
 
-// === EVENT LISTENERS (Safe Load) ===
+// === পেজ লোড হওয়ার পর সব লজিক রান হবে (Error Free) ===
 document.addEventListener("DOMContentLoaded", () => {
     
-    // Login
+    // UI Elements
+    const ui = {
+        authBox: document.getElementById("authBox"),
+        mainContent: document.getElementById("mainContent"),
+        bottomNav: document.getElementById("bottomNav"),
+        statusBadge: document.getElementById("statusBadge"),
+        authMsg: document.getElementById("authMsg")
+    };
+
+    // 1. LOGIN BUTTON
     const loginBtn = document.getElementById("loginBtn");
     if(loginBtn) {
         loginBtn.addEventListener("click", async () => {
             const email = document.getElementById("emailField").value;
             const pass = document.getElementById("passwordField").value;
-            const msg = document.getElementById("authMsg");
-            msg.textContent = "Logging in..."; msg.style.color = "#4fc3f7";
-            try { await signInWithEmailAndPassword(auth, email, pass); } 
-            catch (e) { msg.textContent = "Error: " + e.code; msg.style.color = "#ff1744"; }
+            
+            ui.authMsg.textContent = "Logging in...";
+            ui.authMsg.style.color = "#4fc3f7";
+
+            try { 
+                await signInWithEmailAndPassword(auth, email, pass); 
+                // সফল হলে onAuthStateChanged ধরবে
+            } 
+            catch (e) { 
+                ui.authMsg.textContent = "Error: " + e.code; 
+                ui.authMsg.style.color = "#ff1744"; 
+            }
         });
     }
 
-    // Logout
+    // 2. LOGOUT BUTTON
     const logoutBtn = document.getElementById("logoutBtn");
-    if(logoutBtn) logoutBtn.addEventListener("click", () => showDialog("Exit", "Logout system?", () => signOut(auth)));
+    if(logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+            showDialog("Exit", "Logout system?", () => signOut(auth));
+        });
+    }
 
-    // Master Button
+    // 3. AUTH STATE CHECK
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            ui.authBox.style.display = "none";
+            ui.mainContent.style.display = "block";
+            ui.bottomNav.style.display = "flex";
+            ui.statusBadge.textContent = "Connecting...";
+            window.switchTab('home');
+            startListeners();
+        } else {
+            ui.authBox.style.display = "flex";
+            ui.mainContent.style.display = "none";
+            ui.bottomNav.style.display = "none";
+            ui.authMsg.textContent = "";
+        }
+    });
+
+    // 4. MASTER BUTTON
     const masterBtn = document.getElementById("masterBtn");
     if(masterBtn) {
         masterBtn.addEventListener("click", () => {
@@ -59,16 +97,44 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Add Schedule
+    // 5. SETTINGS (THEME)
+    const themeToggle = document.getElementById("themeToggle");
+    if(themeToggle) {
+        if(localStorage.getItem("theme") === "light") {
+            document.body.classList.add("light-mode");
+            themeToggle.checked = false;
+        } else {
+            themeToggle.checked = true;
+        }
+        themeToggle.addEventListener("change", () => {
+            if(!themeToggle.checked) {
+                document.body.classList.add("light-mode");
+                localStorage.setItem("theme", "light");
+            } else {
+                document.body.classList.remove("light-mode");
+                localStorage.setItem("theme", "dark");
+            }
+        });
+    }
+
+    // 6. ADD SCHEDULE BUTTON
     const addBtn = document.querySelector(".add-btn");
     if(addBtn) addBtn.addEventListener("click", addNewSchedule);
 
+    // 7. RENAME MODAL
+    const openRenameBtn = document.getElementById("openRenameBtn"); // Settings page button
+    if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
+    
+    const closeRenameIcon = document.querySelector(".close-icon");
+    if(closeRenameIcon) closeRenameIcon.addEventListener("click", () => document.getElementById("renameModal").classList.remove("active"));
+
     // Initial Loads
     populateTimeSelects();
-    loadTheme();
 });
 
-// === NAVIGATION ===
+// --- HELPER FUNCTIONS ---
+
+// Navigation
 window.switchTab = function(tabName) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
     const target = document.getElementById(tabName + 'Page');
@@ -77,44 +143,7 @@ window.switchTab = function(tabName) {
     if(radio) radio.checked = true;
 };
 
-// === RENAME MODAL LOGIC ===
-const renameModal = document.getElementById("renameModal");
-window.openRenameModal = function() { renameModal.classList.add("active"); };
-window.closeRenameModal = function() { renameModal.classList.remove("active"); };
-
-window.saveNameManually = function(id) {
-    const input = document.getElementById("rename" + id);
-    const btn = input.nextElementSibling;
-    if(input.value && input.value.trim() !== "") {
-        set(ref(db, "/label" + id), input.value).then(() => {
-            btn.style.background = "#00c853"; btn.innerHTML = "<i class='fas fa-check'></i>";
-            setTimeout(() => { btn.style.background = "#4e54c8"; btn.innerHTML = "<i class='fas fa-save'></i>"; }, 1500);
-        });
-    }
-};
-
-// === AUTH STATE ===
-onAuthStateChanged(auth, (user) => {
-    const authBox = document.getElementById("authBox");
-    const mainContent = document.getElementById("mainContent");
-    const bottomNav = document.getElementById("bottomNav");
-    const badge = document.getElementById("statusBadge");
-
-    if (user) {
-        authBox.style.display = "none";
-        mainContent.style.display = "block";
-        bottomNav.style.display = "flex";
-        badge.textContent = "Connecting...";
-        switchTab('home');
-        startListeners();
-    } else {
-        authBox.style.display = "flex";
-        mainContent.style.display = "none";
-        bottomNav.style.display = "none";
-    }
-});
-
-// === FIREBASE LISTENERS ===
+// Listeners
 function startListeners() {
     const badge = document.getElementById("statusBadge");
     
@@ -142,7 +171,7 @@ function startListeners() {
             }
             updateMasterButtonUI();
         });
-        // Label
+        // Labels
         onValue(ref(db, "/label" + idx), (snap) => {
             if(snap.val()) {
                 const el = document.getElementById("name_gpio" + idx);
@@ -153,11 +182,12 @@ function startListeners() {
                 renderList();
             }
         });
-        // Timer
+        // Timers
         onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn"+idx] = snap.val(); renderList(); });
         onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff"+idx] = snap.val(); renderList(); });
     }
 
+    // Button Click Handlers
     document.querySelectorAll(".gpio-button:not(.master-style)").forEach((btn) => {
         btn.onclick = () => {
             const key = btn.dataset.gpio;
@@ -178,20 +208,17 @@ function updateMasterButtonUI() {
     masterStatus.textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
-// === UTILS ===
-function loadTheme() {
-    const themeToggle = document.getElementById("themeToggle");
-    if(!themeToggle) return;
-    if(localStorage.getItem("theme") === "light") {
-        document.body.classList.add("light-mode"); themeToggle.checked = false;
-    } else {
-        themeToggle.checked = true;
+// Utils
+window.saveNameManually = function(id) {
+    const input = document.getElementById("rename" + id);
+    const btn = input.nextElementSibling;
+    if(input.value && input.value.trim() !== "") {
+        set(ref(db, "/label" + id), input.value).then(() => {
+            btn.style.background = "#00c853"; btn.innerHTML = "<i class='fas fa-check'></i>";
+            setTimeout(() => { btn.style.background = "#4e54c8"; btn.innerHTML = "<i class='fas fa-save'></i>"; }, 1500);
+        });
     }
-    themeToggle.addEventListener("change", () => {
-        if(!themeToggle.checked) { document.body.classList.add("light-mode"); localStorage.setItem("theme", "light"); }
-        else { document.body.classList.remove("light-mode"); localStorage.setItem("theme", "dark"); }
-    });
-}
+};
 
 function populateTimeSelects() {
     const h = document.getElementById("schedHour");
@@ -237,7 +264,7 @@ function addItem(c, i, act, time, name) {
     c.innerHTML += `<div class="schedule-item"><div><b>${name}</b> <span style="font-size:12px;display:block;margin-top:2px">will turn <span style="color:${act=='On'?'#00e676':'#ff1744'};font-weight:bold">${act.toUpperCase()}</span> at ${time}</span></div><button onclick="window.delT(${i}, '${act}')" class="del-btn"><i class="fas fa-trash"></i></button></div>`;
 }
 
-function addNewSchedule() {
+window.addNewSchedule = () => {
     let d = document.getElementById("schedDeviceSelect").value;
     let a = document.getElementById("schedActionSelect").value;
     let hh = document.getElementById("schedHour").value;
@@ -247,14 +274,13 @@ function addNewSchedule() {
     if(ampm === "PM" && h < 12) h = h + 12; if(ampm === "AM" && h === 12) h = 0;
     let t = (h<10?"0"+h:h) + ":" + mm;
     set(ref(db, "/time"+a+d), t).then(()=>alert("Timer Set!")).catch(e=>alert(e.message));
-}
+};
 
-// Global scope
 window.delT = (i, a) => {
     if(confirm("Delete timer?")) set(ref(db, "/time"+a+i), "");
 };
 
-// Modal
+// Modal Logic
 const modal = document.getElementById("customModal");
 let onConfirm = null;
 function showDialog(t, m, cb) { 
