@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-const firebaseConfig = {
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDxkigmr_aFKfkcA40tYxkJ7uNFxtmg34s",
@@ -13,6 +12,7 @@ const firebaseConfig = {
   messagingSenderId: "1088125775954",
   appId: "1:1088125775954:web:743b9899cbcb7011966f8b"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
@@ -41,11 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const openRenameBtn = document.getElementById("openRenameBtn");
     if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
     
-    // TIMER BUTTON FIX (Chrome Compatible)
     const openTimerBtn = document.getElementById("openTimerModalBtn");
     if(openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
 
-    // CLOSE BUTTONS
     document.querySelectorAll(".close-icon").forEach(icon => {
         icon.addEventListener("click", function() {
             this.closest(".modal-overlay").classList.remove("active");
@@ -81,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// --- POPUP LIST LOGIC (Custom Select) ---
+// POPUP LIST LOGIC
 window.openSelection = function(type) {
     const modal = document.getElementById("selectionModal");
     const title = document.getElementById("selectionTitle");
@@ -120,7 +118,6 @@ window.openSelection = function(type) {
         div.onclick = () => {
             tempSelection[type] = opt.val;
             
-            // Update Display Text
             if(type === 'device') document.getElementById("displayDevice").textContent = opt.text;
             else if(type === 'action') document.getElementById("displayAction").textContent = opt.text;
             else if(type === 'hour') document.getElementById("displayHour").textContent = opt.text;
