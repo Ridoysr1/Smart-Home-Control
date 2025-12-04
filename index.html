@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Smart Home</title>
+    
     <link rel="stylesheet" href="styles.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -13,7 +15,7 @@
     
     <div class="header-section">
         <h1>My Home</h1>
-        <div id="statusBadge" class="status-badge offline">Offline</div>
+        <div id="statusBadge" class="status-badge offline">System Offline</div>
     </div>
 
     <div id="authBox" class="auth-screen">
@@ -29,16 +31,20 @@
         <div id="homePage" class="page-content active-page">
             <div class="switch-grid-container">
                 <div class="button-grid">
-                    <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1"><div class="btn-top"><span id="name_gpio1" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2"><div class="btn-top"><span id="name_gpio2" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3"><div class="btn-top"><span id="name_gpio3" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4"><div class="btn-top"><span id="name_gpio4" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5"><div class="btn-top"><span id="name_gpio5" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio6Btn" class="gpio-button" data-gpio="gpio6"><div class="btn-top"><span id="name_gpio6" class="device-name">...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1"><div class="btn-top"><span id="name_gpio1" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2"><div class="btn-top"><span id="name_gpio2" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3"><div class="btn-top"><span id="name_gpio3" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4"><div class="btn-top"><span id="name_gpio4" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5"><div class="btn-top"><span id="name_gpio5" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio6Btn" class="gpio-button" data-gpio="gpio6"><div class="btn-top"><span id="name_gpio6" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
                 </div>
+                
                 <div class="master-container">
                     <button id="masterBtn" class="gpio-button master-style">
-                        <div class="btn-top"><i class="fas fa-power-off" style="color:#ff9800"></i><span class="device-name" style="color:#ff9800">MASTER</span></div>
+                        <div class="btn-top">
+                            <i class="fas fa-power-off" style="color: #ff9800;"></i>
+                            <span class="device-name" style="color: #ff9800;">MASTER</span>
+                        </div>
                         <span id="masterStatus" class="status">ALL ON</span>
                     </button>
                 </div>
@@ -48,37 +54,68 @@
         <div id="timerPage" class="page-content">
             <div class="add-schedule-form">
                 <h3>Set Timer</h3>
+                
+                <label>Select Device</label>
+                <select id="schedDeviceSelect"></select>
+
                 <div class="row-inputs">
-                    <select id="schedDeviceSelect" class="half"></select>
-                    <select id="schedActionSelect" class="half"><option value="On">ON</option><option value="Off">OFF</option></select>
-                </div>
-                <div class="row-inputs">
-                    <div class="digital-time-box" style="width:100%">
-                        <select id="schedHour"></select><span class="colon">:</span><select id="schedMinute"></select><select id="schedAmPm"><option>AM</option><option>PM</option></select>
+                    <div class="half">
+                        <label>Action</label>
+                        <select id="schedActionSelect">
+                            <option value="On">Turn ON</option>
+                            <option value="Off">Turn OFF</option>
+                        </select>
+                    </div>
+                    
+                    <div class="half">
+                        <label>Time</label>
+                        <div class="digital-time-box">
+                            <select id="schedHour"></select>
+                            <span class="colon">:</span>
+                            <select id="schedMinute"></select>
+                            <select id="schedAmPm">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <button onclick="addNewSchedule()" class="btn add-btn">Add Schedule</button>
+                <button onclick="addNewSchedule()" class="btn add-btn">
+                    <i class="fas fa-plus-circle"></i> Add Schedule
+                </button>
             </div>
+
+            <div class="list-header">Active Schedules</div>
             <div id="scheduleListContainer" class="schedule-list"></div>
         </div>
 
         <div id="settingsPage" class="page-content">
+            
             <div class="settings-card">
-                <h3>Edit Names</h3>
-                <div class="rename-list">
-                    <div class="input-group"><span class="lbl">SW1</span><input type="text" id="rename1" onchange="saveName(1, this.value)"></div>
-                    <div class="input-group"><span class="lbl">SW2</span><input type="text" id="rename2" onchange="saveName(2, this.value)"></div>
-                    <div class="input-group"><span class="lbl">SW3</span><input type="text" id="rename3" onchange="saveName(3, this.value)"></div>
-                    <div class="input-group"><span class="lbl">SW4</span><input type="text" id="rename4" onchange="saveName(4, this.value)"></div>
-                    <div class="input-group"><span class="lbl">SW5</span><input type="text" id="rename5" onchange="saveName(5, this.value)"></div>
-                    <div class="input-group"><span class="lbl">SW6</span><input type="text" id="rename6" onchange="saveName(6, this.value)"></div>
+                <div class="setting-row">
+                    <span><i class="fas fa-moon"></i> Dark Mode</span>
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="themeToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
                 </div>
             </div>
-            <button id="logoutBtn" class="btn logout-btn">Logout</button>
+
+            <div class="settings-card" onclick="openRenameModal()" style="cursor: pointer;">
+                <div class="setting-row">
+                    <span><i class="fas fa-edit"></i> Configure Switch Names</span>
+                    <i class="fas fa-chevron-right" style="color: #aaa;"></i>
+                </div>
+            </div>
+
+            <div class="logout-container">
+                <button id="logoutBtn" class="logout-small">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
         </div>
 
-    </div>
-
+    </div> 
     <div id="bottomNav" class="bottom-nav-wrapper" style="display:none;">
         <div class="flip-switch">
             <input type="radio" id="tab-home" name="nav-tab" checked onchange="switchTab('home')">
@@ -104,8 +141,26 @@
         </div>
     </div>
 
+    <div id="renameModal" class="modal-overlay">
+        <div class="modal-box rename-box">
+            <div class="modal-header">
+                <h3>Edit Names</h3>
+                <i class="fas fa-times close-icon" onclick="closeRenameModal()"></i>
+            </div>
+            <div class="rename-list-scroll">
+                <div class="input-group"><span class="lbl">SW1</span><input type="text" id="rename1" placeholder="Name"><button class="save-btn" onclick="saveNameManually(1)"><i class="fas fa-save"></i></button></div>
+                <div class="input-group"><span class="lbl">SW2</span><input type="text" id="rename2" placeholder="Name"><button class="save-btn" onclick="saveNameManually(2)"><i class="fas fa-save"></i></button></div>
+                <div class="input-group"><span class="lbl">SW3</span><input type="text" id="rename3" placeholder="Name"><button class="save-btn" onclick="saveNameManually(3)"><i class="fas fa-save"></i></button></div>
+                <div class="input-group"><span class="lbl">SW4</span><input type="text" id="rename4" placeholder="Name"><button class="save-btn" onclick="saveNameManually(4)"><i class="fas fa-save"></i></button></div>
+                <div class="input-group"><span class="lbl">SW5</span><input type="text" id="rename5" placeholder="Name"><button class="save-btn" onclick="saveNameManually(5)"><i class="fas fa-save"></i></button></div>
+                <div class="input-group"><span class="lbl">SW6</span><input type="text" id="rename6" placeholder="Name"><button class="save-btn" onclick="saveNameManually(6)"><i class="fas fa-save"></i></button></div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script type="module" src="app.js"></script>
+
 </body>
 </html>
