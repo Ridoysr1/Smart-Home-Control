@@ -10,7 +10,7 @@ const firebaseConfig = {
   projectId: "smart-home-control-85131",
   storageBucket: "smart-home-control-85131.firebasestorage.app",
   messagingSenderId: "1088125775954",
-  appId: "1:1088125775954:web:2017df9c7b290240966f8b"
+  appId: "1:1088125775954:web:743b9899cbcb7011966f8b"
 };
 
 // Initialize Firebase
@@ -348,4 +348,3 @@ function showDialog(t, m, cb) {
 }
 document.getElementById("btnCancel").onclick = () => modal.classList.remove("active");
 document.getElementById("btnConfirm").onclick = () => { if (onConfirm) onConfirm(); modal.classList.remove("active"); };
-
