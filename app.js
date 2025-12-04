@@ -17,36 +17,44 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-// ... Global Vars ...
 let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
 let activeTimers = {};
 let lastSeenTime = 0;
 
-// ... DOM Loaded ...
+// DOM Loaded
 document.addEventListener("DOMContentLoaded", () => {
-    // LOGIN
+    
+    // Login
     const loginBtn = document.getElementById("loginBtn");
     if(loginBtn) {
         loginBtn.addEventListener("click", async () => {
             const email = document.getElementById("emailField").value;
             const pass = document.getElementById("passwordField").value;
-            try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { alert(e.message); }
+            const msg = document.getElementById("authMsg");
+            msg.textContent = "Logging in..."; msg.style.color = "#4fc3f7";
+            try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { msg.textContent = "Error: " + e.code; msg.style.color = "#ff1744"; }
         });
     }
 
-    // LOGOUT
+    // Logout
     const logoutBtn = document.getElementById("logoutBtn");
     if(logoutBtn) logoutBtn.addEventListener("click", () => showDialog("Exit", "Logout system?", () => signOut(auth)));
 
-    // RENAME MODAL TRIGGER (Settings Page)
+    // Modals
     const openRenameBtn = document.getElementById("openRenameBtn");
     if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
+    
+    const openTimerBtn = document.getElementById("openTimerModalBtn");
+    if(openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
 
-    // TIMER MODAL TRIGGER (Timer Page)
-    const openTimerModalBtn = document.getElementById("openTimerModalBtn");
-    if(openTimerModalBtn) openTimerModalBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
+    // Close Modals
+    document.querySelectorAll(".close-icon").forEach(icon => {
+        icon.addEventListener("click", function() {
+            this.closest(".modal-overlay").classList.remove("active");
+        });
+    });
 
-    // Theme Toggle
+    // Theme
     const themeToggle = document.getElementById("themeToggle");
     if(themeToggle) {
         if(localStorage.getItem("theme") === "light") { document.body.classList.add("light-mode"); themeToggle.checked = false; }
@@ -57,30 +65,44 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Utils
+    // Master
+    const masterBtn = document.getElementById("masterBtn");
+    if(masterBtn) {
+        masterBtn.addEventListener("click", () => {
+            let anyOn = false;
+            for(let i=1; i<=6; i++) {
+                const btn = document.getElementById("gpio" + i + "Btn");
+                if(btn && btn.classList.contains("on")) { anyOn = true; break; }
+            }
+            const action = anyOn ? "Turn OFF" : "Turn ON";
+            const val = anyOn ? 0 : 1;
+            showDialog("Master Control", `${action} All Switches?`, () => {
+                for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), val);
+            });
+        });
+    }
+
     populateTimeSelects();
 });
 
-// ... SHARED FUNCTIONS ...
+// Navigation
 window.switchTab = function(tabName) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
-    document.getElementById(tabName + 'Page').classList.add('active-page');
-    document.getElementById('tab-' + tabName).checked = true;
+    const target = document.getElementById(tabName + 'Page');
+    if(target) target.classList.add('active-page');
+    const radio = document.getElementById('tab-' + tabName);
+    if(radio) radio.checked = true;
 };
 
-// ... MODAL CLOSE HELPER ...
-window.closeModal = function(id) {
-    document.getElementById(id).classList.remove("active");
-};
-
-// ... FIREBASE LISTENERS & LOGIC (Same as before) ...
-// (এই অংশটি অপরিবর্তিত থাকবে)
+// Auth State
 onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById("authBox").style.display = "none";
         document.getElementById("mainContent").style.display = "block";
         document.getElementById("bottomNav").style.display = "flex";
-        window.switchTab('home'); startListeners();
+        document.getElementById("statusBadge").textContent = "Connecting...";
+        switchTab('home');
+        startListeners();
     } else {
         document.getElementById("authBox").style.display = "flex";
         document.getElementById("mainContent").style.display = "none";
@@ -94,7 +116,13 @@ function startListeners() {
         document.getElementById("statusBadge").className = "status-badge online";
         document.getElementById("statusBadge").textContent = "Online";
     });
-    // ... Other listeners ...
+    setInterval(() => {
+        if (Date.now() - lastSeenTime > 15000) {
+            document.getElementById("statusBadge").className = "status-badge offline";
+            document.getElementById("statusBadge").textContent = "Offline";
+        }
+    }, 1000);
+
     for(let i=1; i<=6; i++) {
         const idx = i;
         onValue(ref(db, "/gpio" + idx), (snap) => {
@@ -105,11 +133,13 @@ function startListeners() {
                 if(val === 1) { btn.classList.add("on"); if(txt) txt.textContent="ON"; } 
                 else { btn.classList.remove("on"); if(txt) txt.textContent="OFF"; }
             }
+            updateMasterButtonUI();
         });
         onValue(ref(db, "/label" + idx), (snap) => {
             if(snap.val()) {
-                document.getElementById("name_gpio" + idx).textContent = snap.val();
-                let input = document.getElementById("rename" + idx);
+                const el = document.getElementById("name_gpio" + idx);
+                const input = document.getElementById("rename" + idx);
+                if(el) el.textContent = snap.val();
                 if(input && document.activeElement !== input) input.value = snap.val();
                 updateDropdown();
                 renderList();
@@ -118,7 +148,7 @@ function startListeners() {
         onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn"+idx] = snap.val(); renderList(); });
         onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff"+idx] = snap.val(); renderList(); });
     }
-    // Button Clicks
+
     document.querySelectorAll(".gpio-button:not(.master-style)").forEach((btn) => {
         btn.onclick = () => {
             const key = btn.dataset.gpio;
@@ -126,20 +156,73 @@ function startListeners() {
             set(ref(db, "/" + key), newState);
         };
     });
-    // Master
-    document.getElementById("masterBtn").onclick = () => {
-        let anyOn = false;
-        for(let i=1; i<=6; i++) if(document.getElementById("gpio"+i+"Btn").classList.contains("on")) anyOn = true;
-        const val = anyOn ? 0 : 1;
-        showDialog("Master", anyOn?"Turn OFF All?":"Turn ON All?", () => { for(let i=1; i<=6; i++) set(ref(db, "/gpio"+i), val); });
-    };
 }
 
-// ... UTILS (Time, Dropdown, Rename) ...
+function updateMasterButtonUI() {
+    const masterStatus = document.getElementById("masterStatus");
+    if(!masterStatus) return;
+    let anyOn = false;
+    for(let i=1; i<=6; i++) {
+        const btn = document.getElementById("gpio" + i + "Btn");
+        if(btn && btn.classList.contains("on")) { anyOn = true; break; }
+    }
+    masterStatus.textContent = anyOn ? "ALL OFF" : "ALL ON";
+}
+
+// Utils
 window.saveNameManually = function(id) {
-    const val = document.getElementById("rename" + id).value;
-    if(val) set(ref(db, "/label" + id), val);
+    const input = document.getElementById("rename" + id);
+    if(input.value && input.value.trim() !== "") set(ref(db, "/label" + id), input.value);
 };
+
+function populateTimeSelects() {
+    const h = document.getElementById("schedHour");
+    const m = document.getElementById("schedMinute");
+    if(!h || !m) return;
+    for(let i=1; i<=12; i++) { let v=i<10?"0"+i:i; let o=document.createElement("option"); o.value=v; o.text=v; h.add(o); }
+    for(let i=0; i<60; i++) { let v=i<10?"0"+i:i; let o=document.createElement("option"); o.value=v; o.text=v; m.add(o); }
+}
+
+function updateDropdown() {
+    const s = document.getElementById("schedDeviceSelect");
+    if(!s) return;
+    const curr = s.value; s.innerHTML = "";
+    for(let i=1; i<=6; i++) {
+        let name = document.getElementById("name_gpio"+i)?.textContent || "SW "+i;
+        let o = document.createElement("option"); o.value = i; o.text = name; s.add(o);
+    }
+    s.value = curr;
+}
+
+function addItem(c, i, act, time, name) {
+    const color = act === 'On' ? '#00e676' : '#ff1744';
+    c.innerHTML += `
+    <div class="schedule-item">
+        <button onclick="window.delT(${i}, '${act}')" class="del-btn"><i class="fas fa-trash"></i></button>
+        <i class="fas fa-clock" style="font-size: 24px; color: ${color}; margin-bottom: 5px;"></i>
+        <b>${name}</b>
+        <div class="schedule-info">
+            Will turn <span style="color:${color};font-weight:bold;">${act.toUpperCase()}</span><br>at <b>${time}</b>
+        </div>
+    </div>`;
+}
+
+function formatTime12(time24) {
+    if(!time24) return "";
+    let [H, M] = time24.split(":"); H = parseInt(H);
+    let ampm = H >= 12 ? "PM" : "AM"; H = H % 12; H = H ? H : 12;
+    return `${H < 10 ? "0"+H : H}:${M} ${ampm}`;
+}
+
+function renderList() {
+    const c = document.getElementById("scheduleListContainer"); if(!c) return;
+    c.innerHTML = "";
+    for(let i=1; i<=6; i++) {
+        let n = document.getElementById("name_gpio"+i)?.textContent || "SW "+i;
+        if(activeTimers["timeOn"+i]) addItem(c, i, "On", formatTime12(activeTimers["timeOn"+i]), n);
+        if(activeTimers["timeOff"+i]) addItem(c, i, "Off", formatTime12(activeTimers["timeOff"+i]), n);
+    }
+}
 
 window.addNewSchedule = function() {
     let d = document.getElementById("schedDeviceSelect").value;
@@ -149,34 +232,25 @@ window.addNewSchedule = function() {
     let ampm = document.getElementById("schedAmPm").value;
     let h = parseInt(hh);
     if(ampm === "PM" && h < 12) h += 12; if(ampm === "AM" && h === 12) h = 0;
-    set(ref(db, "/time"+a+d), (h<10?"0"+h:h)+":"+mm).then(()=>{ window.closeModal('timerModal'); alert("Timer Set!"); });
+    let t = (h<10?"0"+h:h) + ":" + mm;
+    set(ref(db, "/time"+a+d), t).then(() => {
+        document.getElementById("timerModal").classList.remove("active");
+        alert("Timer Set!");
+    });
 };
 
-// ... DIALOG ...
+window.delT = (i, a) => {
+    if(confirm("Delete timer?")) set(ref(db, "/time"+a+i), "");
+};
+
+// Modal
 const modal = document.getElementById("customModal");
 let onConfirm = null;
 function showDialog(t, m, cb) { 
-    document.getElementById("modalTitle").textContent=t; document.getElementById("modalMessage").textContent=m; onConfirm=cb; modal.classList.add("active"); 
+    document.getElementById("modalTitle").textContent=t; 
+    document.getElementById("modalMessage").textContent=m; 
+    onConfirm=cb; 
+    modal.classList.add("active"); 
 }
 document.getElementById("btnCancel").onclick = () => modal.classList.remove("active");
 document.getElementById("btnConfirm").onclick = () => { if(onConfirm) onConfirm(); modal.classList.remove("active"); };
-
-function populateTimeSelects() {
-    const h = document.getElementById("schedHour"), m = document.getElementById("schedMinute");
-    for(let i=1; i<=12; i++) { let o=document.createElement("option"); o.value=(i<10?"0"+i:i); o.text=o.value; h.add(o); }
-    for(let i=0; i<60; i++) { let o=document.createElement("option"); o.value=(i<10?"0"+i:i); o.text=o.value; m.add(o); }
-}
-function updateDropdown() {
-    const s = document.getElementById("schedDeviceSelect"); s.innerHTML = "";
-    for(let i=1; i<=6; i++) { let o=document.createElement("option"); o.value=i; o.text=document.getElementById("name_gpio"+i).textContent; s.add(o); }
-}
-function renderList() {
-    const c = document.getElementById("scheduleListContainer"); c.innerHTML = "";
-    for(let i=1; i<=6; i++) {
-        let n = document.getElementById("name_gpio"+i).textContent;
-        if(activeTimers["timeOn"+i]) c.innerHTML += getItem(i, "On", activeTimers["timeOn"+i], n);
-        if(activeTimers["timeOff"+i]) c.innerHTML += getItem(i, "Off", activeTimers["timeOff"+i], n);
-    }
-}
-function getItem(i, a, t, n) { return `<div class="schedule-item"><div><b>${n}</b> ${a} at ${t}</div><button class="del-btn" onclick="delT(${i},'${a}')"><i class="fas fa-trash"></i></button></div>`; }
-window.delT = (i, a) => { if(confirm("Delete?")) set(ref(db, "/time"+a+i), ""); };
