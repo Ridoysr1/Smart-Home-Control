@@ -51,7 +51,6 @@
                     <span><i class="fas fa-plus-circle"></i> Set New Timer</span>
                 </div>
             </div>
-
             <div class="list-header" style="margin-top: 20px;">Active Schedules</div>
             <div id="scheduleListContainer" class="schedule-list"></div>
         </div>
@@ -81,7 +80,7 @@
                 <div class="setting-row"><span><i class="fas fa-edit"></i> Configure Switch Names</span><i class="fas fa-chevron-right" style="color: #aaa;"></i></div>
             </div>
 
-            <div class="logout-wrapper-bottom">
+            <div class="logout-container">
                 <button id="logoutBtn" class="logout-small"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
@@ -106,8 +105,7 @@
                 <h3 id="selectionTitle">Select</h3>
                 <i class="fas fa-times close-icon" onclick="closeModal('selectionModal')"></i>
             </div>
-            <div id="selectionListContainer" class="rename-list-scroll">
-                </div>
+            <div id="selectionListContainer" class="rename-list-scroll"></div>
         </div>
     </div>
 
@@ -135,23 +133,21 @@
     <div id="timerModal" class="modal-overlay">
         <div class="modal-box rename-box">
             <div class="modal-header"><h3>Set Timer</h3><i class="fas fa-times close-icon" onclick="closeModal('timerModal')"></i></div>
-            
             <div class="rename-list-scroll">
                 <div class="custom-select-wrapper" onclick="openSelection('device')">
                     <span class="lbl">Device</span>
                     <div class="custom-select-display" id="displayDevice">Switch 1</div>
                 </div>
-
                 <div class="custom-select-wrapper" onclick="openSelection('action')">
                     <span class="lbl">Action</span>
                     <div class="custom-select-display" id="displayAction">Turn ON</div>
                 </div>
-
-                <div class="input-group">
-                    <span class="lbl">Time</span>
-                    <input type="time" id="schedTimeInput" style="flex-grow:1; text-align:right; font-weight:bold; color-scheme:dark;">
+                <div class="time-picker-row">
+                    <div class="custom-select-display small" onclick="openSelection('hour')" id="displayHour">12</div>
+                    <span class="colon">:</span>
+                    <div class="custom-select-display small" onclick="openSelection('minute')" id="displayMinute">00</div>
+                    <div class="custom-select-display small" onclick="openSelection('ampm')" id="displayAmPm">AM</div>
                 </div>
-
                 <button onclick="addNewSchedule()" class="btn add-btn" style="margin-top:15px">Save Schedule</button>
             </div>
         </div>
