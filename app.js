@@ -17,108 +17,121 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-// --- DOM ELEMENTS ---
-const ui = {
-    authBox: document.getElementById("authBox"),
-    mainContent: document.getElementById("mainContent"),
-    bottomNav: document.getElementById("bottomNav"),
-    statusBadge: document.getElementById("statusBadge"),
-    authMsg: document.getElementById("authMsg")
-};
-
+// Global Variables
 let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
 let activeTimers = {};
 let lastSeenTime = 0;
 
-// --- LOGIN LOGIC ---
-document.getElementById("loginBtn").addEventListener("click", () => {
-    const email = document.getElementById("emailField").value;
-    const pass = document.getElementById("passwordField").value;
+// === EVENT LISTENERS (Safe Load) ===
+document.addEventListener("DOMContentLoaded", () => {
     
-    ui.authMsg.style.color = "#4fc3f7";
-    ui.authMsg.textContent = "Logging in...";
-
-    signInWithEmailAndPassword(auth, email, pass)
-        .catch((error) => {
-            console.error(error);
-            ui.authMsg.style.color = "#ff1744";
-            // ইউজারকে সঠিক কারণ দেখানো হবে
-            if(error.code === 'auth/invalid-email') ui.authMsg.textContent = "Invalid Email!";
-            else if(error.code === 'auth/wrong-password') ui.authMsg.textContent = "Wrong Password!";
-            else if(error.code === 'auth/user-not-found') ui.authMsg.textContent = "User not found!";
-            else ui.authMsg.textContent = "Login Failed!";
+    // Login
+    const loginBtn = document.getElementById("loginBtn");
+    if(loginBtn) {
+        loginBtn.addEventListener("click", async () => {
+            const email = document.getElementById("emailField").value;
+            const pass = document.getElementById("passwordField").value;
+            const msg = document.getElementById("authMsg");
+            msg.textContent = "Logging in..."; msg.style.color = "#4fc3f7";
+            try { await signInWithEmailAndPassword(auth, email, pass); } 
+            catch (e) { msg.textContent = "Error: " + e.code; msg.style.color = "#ff1744"; }
         });
-});
-
-document.getElementById("logoutBtn").onclick = () => {
-    showDialog("Exit", "Logout?", () => signOut(auth));
-};
-
-// --- AUTH STATE ---
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        ui.authBox.style.display = "none";
-        ui.mainContent.style.display = "block";
-        ui.bottomNav.style.display = "flex";
-        ui.statusBadge.textContent = "Connecting...";
-        window.switchTab('home');
-        startListeners();
-    } else {
-        ui.authBox.style.display = "flex";
-        ui.mainContent.style.display = "none";
-        ui.bottomNav.style.display = "none";
-        ui.authMsg.textContent = "";
     }
+
+    // Logout
+    const logoutBtn = document.getElementById("logoutBtn");
+    if(logoutBtn) logoutBtn.addEventListener("click", () => showDialog("Exit", "Logout system?", () => signOut(auth)));
+
+    // Master Button
+    const masterBtn = document.getElementById("masterBtn");
+    if(masterBtn) {
+        masterBtn.addEventListener("click", () => {
+            let anyOn = false;
+            for(let i=1; i<=6; i++) {
+                const btn = document.getElementById("gpio" + i + "Btn");
+                if(btn && btn.classList.contains("on")) { anyOn = true; break; }
+            }
+            const action = anyOn ? "Turn OFF" : "Turn ON";
+            const val = anyOn ? 0 : 1;
+            showDialog("Master Control", `${action} All Switches?`, () => {
+                for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), val);
+            });
+        });
+    }
+
+    // Add Schedule
+    const addBtn = document.querySelector(".add-btn");
+    if(addBtn) addBtn.addEventListener("click", addNewSchedule);
+
+    // Initial Loads
+    populateTimeSelects();
+    loadTheme();
 });
 
-// --- NAVIGATION ---
+// === NAVIGATION ===
 window.switchTab = function(tabName) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
-    document.getElementById(tabName + 'Page').classList.add('active-page');
-    document.getElementById('tab-' + tabName).checked = true;
+    const target = document.getElementById(tabName + 'Page');
+    if(target) target.classList.add('active-page');
+    const radio = document.getElementById('tab-' + tabName);
+    if(radio) radio.checked = true;
 };
 
-// --- MASTER SWITCH ---
-const masterBtn = document.getElementById("masterBtn");
-const masterStatus = document.getElementById("masterStatus");
+// === RENAME MODAL LOGIC ===
+const renameModal = document.getElementById("renameModal");
+window.openRenameModal = function() { renameModal.classList.add("active"); };
+window.closeRenameModal = function() { renameModal.classList.remove("active"); };
 
-masterBtn.onclick = () => {
-    let anyOn = false;
-    for(let i=1; i<=6; i++) {
-        const btn = document.getElementById("gpio" + i + "Btn");
-        if(btn && btn.classList.contains("on")) { anyOn = true; break; }
+window.saveNameManually = function(id) {
+    const input = document.getElementById("rename" + id);
+    const btn = input.nextElementSibling;
+    if(input.value && input.value.trim() !== "") {
+        set(ref(db, "/label" + id), input.value).then(() => {
+            btn.style.background = "#00c853"; btn.innerHTML = "<i class='fas fa-check'></i>";
+            setTimeout(() => { btn.style.background = "#4e54c8"; btn.innerHTML = "<i class='fas fa-save'></i>"; }, 1500);
+        });
     }
-    const action = anyOn ? "Turn OFF" : "Turn ON";
-    const val = anyOn ? 0 : 1;
-    
-    showDialog("Master Control", `${action} All Switches?`, () => {
-        for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), val);
-    });
 };
 
-function updateMasterButton() {
-    let anyOn = false;
-    for(let i=1; i<=6; i++) {
-        const btn = document.getElementById("gpio" + i + "Btn");
-        if(btn && btn.classList.contains("on")) { anyOn = true; break; }
-    }
-    masterStatus.textContent = anyOn ? "ALL OFF" : "ALL ON";
-}
+// === AUTH STATE ===
+onAuthStateChanged(auth, (user) => {
+    const authBox = document.getElementById("authBox");
+    const mainContent = document.getElementById("mainContent");
+    const bottomNav = document.getElementById("bottomNav");
+    const badge = document.getElementById("statusBadge");
 
-// --- FIREBASE DATA ---
+    if (user) {
+        authBox.style.display = "none";
+        mainContent.style.display = "block";
+        bottomNav.style.display = "flex";
+        badge.textContent = "Connecting...";
+        switchTab('home');
+        startListeners();
+    } else {
+        authBox.style.display = "flex";
+        mainContent.style.display = "none";
+        bottomNav.style.display = "none";
+    }
+});
+
+// === FIREBASE LISTENERS ===
 function startListeners() {
+    const badge = document.getElementById("statusBadge");
+    
+    // Heartbeat
     onValue(ref(db, "/lastSeen"), () => {
         lastSeenTime = Date.now();
-        ui.statusBadge.className = "status-badge online"; ui.statusBadge.textContent = "Online";
+        badge.className = "status-badge online"; badge.textContent = "Online";
     });
     setInterval(() => {
         if (Date.now() - lastSeenTime > 15000) {
-            ui.statusBadge.className = "status-badge offline"; ui.statusBadge.textContent = "Offline";
+            badge.className = "status-badge offline"; badge.textContent = "Offline";
         }
     }, 1000);
 
     for(let i=1; i<=6; i++) {
         const idx = i;
+        // GPIO
         onValue(ref(db, "/gpio" + idx), (snap) => {
             const val = snap.val();
             const btn = document.getElementById("gpio" + idx + "Btn");
@@ -127,17 +140,20 @@ function startListeners() {
                 if(val === 1) { btn.classList.add("on"); if(txt) txt.textContent="ON"; } 
                 else { btn.classList.remove("on"); if(txt) txt.textContent="OFF"; }
             }
-            updateMasterButton();
+            updateMasterButtonUI();
         });
+        // Label
         onValue(ref(db, "/label" + idx), (snap) => {
             if(snap.val()) {
-                document.getElementById("name_gpio" + idx).textContent = snap.val();
-                let input = document.getElementById("rename" + idx);
+                const el = document.getElementById("name_gpio" + idx);
+                const input = document.getElementById("rename" + idx);
+                if(el) el.textContent = snap.val();
                 if(input && document.activeElement !== input) input.value = snap.val();
                 updateDropdown();
                 renderList();
             }
         });
+        // Timer
         onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn"+idx] = snap.val(); renderList(); });
         onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff"+idx] = snap.val(); renderList(); });
     }
@@ -151,26 +167,47 @@ function startListeners() {
     });
 }
 
-// --- SETTINGS ---
-window.saveName = function(id, newName) {
-    if(newName && newName.trim() !== "") set(ref(db, "/label" + id), newName);
-};
+function updateMasterButtonUI() {
+    const masterStatus = document.getElementById("masterStatus");
+    if(!masterStatus) return;
+    let anyOn = false;
+    for(let i=1; i<=6; i++) {
+        const btn = document.getElementById("gpio" + i + "Btn");
+        if(btn && btn.classList.contains("on")) { anyOn = true; break; }
+    }
+    masterStatus.textContent = anyOn ? "ALL OFF" : "ALL ON";
+}
 
-// --- TIMER UTILS ---
+// === UTILS ===
+function loadTheme() {
+    const themeToggle = document.getElementById("themeToggle");
+    if(!themeToggle) return;
+    if(localStorage.getItem("theme") === "light") {
+        document.body.classList.add("light-mode"); themeToggle.checked = false;
+    } else {
+        themeToggle.checked = true;
+    }
+    themeToggle.addEventListener("change", () => {
+        if(!themeToggle.checked) { document.body.classList.add("light-mode"); localStorage.setItem("theme", "light"); }
+        else { document.body.classList.remove("light-mode"); localStorage.setItem("theme", "dark"); }
+    });
+}
+
 function populateTimeSelects() {
     const h = document.getElementById("schedHour");
     const m = document.getElementById("schedMinute");
+    if(!h || !m) return;
     for(let i=1; i<=12; i++) { let v=i<10?"0"+i:i; let o=document.createElement("option"); o.value=v; o.text=v; h.add(o); }
     for(let i=0; i<60; i++) { let v=i<10?"0"+i:i; let o=document.createElement("option"); o.value=v; o.text=v; m.add(o); }
 }
-window.addEventListener('load', populateTimeSelects);
 
 function updateDropdown() {
     const s = document.getElementById("schedDeviceSelect");
+    if(!s) return;
     const curr = s.value; s.innerHTML = "";
     for(let i=1; i<=6; i++) {
-        let n = document.getElementById("name_gpio"+i)?.textContent || "SW "+i;
-        let o = document.createElement("option"); o.value = i; o.text = n; s.add(o);
+        let name = document.getElementById("name_gpio"+i)?.textContent || "SW "+i;
+        let o = document.createElement("option"); o.value = i; o.text = name; s.add(o);
     }
     s.value = curr;
 }
@@ -185,6 +222,7 @@ function formatTime12(time24) {
 
 function renderList() {
     const c = document.getElementById("scheduleListContainer");
+    if(!c) return;
     c.innerHTML = "";
     let has = false;
     for(let i=1; i<=6; i++) {
@@ -196,10 +234,10 @@ function renderList() {
 }
 
 function addItem(c, i, act, time, name) {
-    c.innerHTML += `<div class="schedule-item"><div><b>${name}</b> <span style="font-size:12px;display:block">will turn <span style="color:${act=='On'?'#00e676':'#ff1744'}">${act.toUpperCase()}</span> at ${time}</span></div><button onclick="window.delT(${i}, '${act}')" class="del-btn"><i class="fas fa-trash"></i></button></div>`;
+    c.innerHTML += `<div class="schedule-item"><div><b>${name}</b> <span style="font-size:12px;display:block;margin-top:2px">will turn <span style="color:${act=='On'?'#00e676':'#ff1744'};font-weight:bold">${act.toUpperCase()}</span> at ${time}</span></div><button onclick="window.delT(${i}, '${act}')" class="del-btn"><i class="fas fa-trash"></i></button></div>`;
 }
 
-window.addNewSchedule = () => {
+function addNewSchedule() {
     let d = document.getElementById("schedDeviceSelect").value;
     let a = document.getElementById("schedActionSelect").value;
     let hh = document.getElementById("schedHour").value;
@@ -208,14 +246,15 @@ window.addNewSchedule = () => {
     let h = parseInt(hh);
     if(ampm === "PM" && h < 12) h = h + 12; if(ampm === "AM" && h === 12) h = 0;
     let t = (h<10?"0"+h:h) + ":" + mm;
-    set(ref(db, "/time"+a+d), t).then(()=>alert("Timer set!")).catch(e=>alert(e.message));
-};
+    set(ref(db, "/time"+a+d), t).then(()=>alert("Timer Set!")).catch(e=>alert(e.message));
+}
 
+// Global scope
 window.delT = (i, a) => {
     if(confirm("Delete timer?")) set(ref(db, "/time"+a+i), "");
 };
 
-// --- MODAL LOGIC ---
+// Modal
 const modal = document.getElementById("customModal");
 let onConfirm = null;
 function showDialog(t, m, cb) { 
