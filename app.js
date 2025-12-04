@@ -51,6 +51,9 @@ if (loginBtn) {
         signInWithEmailAndPassword(auth, email, pass)
             .catch((e) => {
                 console.error(e);
+                // ERROR ALERT ADDED
+                alert("Login Error: " + e.message); 
+                
                 msg.style.color = "#ff1744";
                 if (e.code === 'auth/invalid-email') msg.textContent = "Invalid Email";
                 else if (e.code === 'auth/user-not-found') msg.textContent = "User Not Found";
@@ -68,12 +71,12 @@ if (logoutBtn) {
     });
 }
 
-// Master Button (RESTORED LOGIC)
+// Master Button
 const masterBtn = document.getElementById("masterBtn");
 if (masterBtn) {
     masterBtn.addEventListener("click", () => {
         let anyOn = false;
-        // Check for .on class on buttons (Original Logic)
+        // Check current class "on" (Matches your original working logic)
         for (let i = 1; i <= 6; i++) {
             const btn = document.getElementById("gpio" + i + "Btn");
             if (btn && btn.classList.contains("on")) { anyOn = true; break; }
