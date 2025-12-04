@@ -29,12 +29,12 @@
         <div id="homePage" class="page-content active-page">
             <div class="switch-grid-container">
                 <div class="button-grid">
-                    <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1"><div class="btn-top"><span id="name_gpio1" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2"><div class="btn-top"><span id="name_gpio2" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3"><div class="btn-top"><span id="name_gpio3" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4"><div class="btn-top"><span id="name_gpio4" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5"><div class="btn-top"><span id="name_gpio5" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio6Btn" class="gpio-button" data-gpio="gpio6"><div class="btn-top"><span id="name_gpio6" class="device-name">...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1"><div class="btn-top"><span id="name_gpio1" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2"><div class="btn-top"><span id="name_gpio2" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3"><div class="btn-top"><span id="name_gpio3" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4"><div class="btn-top"><span id="name_gpio4" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5"><div class="btn-top"><span id="name_gpio5" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio6Btn" class="gpio-button" data-gpio="gpio6"><div class="btn-top"><span id="name_gpio6" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
                 </div>
                 <div class="master-container">
                     <button id="masterBtn" class="gpio-button master-style">
@@ -100,6 +100,17 @@
         </div>
     </div>
 
+    <div id="selectionModal" class="modal-overlay" style="z-index: 3000;">
+        <div class="modal-box rename-box">
+            <div class="modal-header">
+                <h3 id="selectionTitle">Select</h3>
+                <i class="fas fa-times close-icon" onclick="closeModal('selectionModal')"></i>
+            </div>
+            <div id="selectionListContainer" class="rename-list-scroll">
+                </div>
+        </div>
+    </div>
+
     <div id="customModal" class="modal-overlay">
         <div class="modal-box">
             <i class="fas fa-question-circle modal-icon"></i><h3 id="modalTitle">Confirm</h3><p id="modalMessage">Sure?</p>
@@ -136,23 +147,13 @@
                     <div class="custom-select-display" id="displayAction">Turn ON</div>
                 </div>
 
-                <div class="time-picker-row">
-                    <div class="custom-select-display small" onclick="openSelection('hour')" id="displayHour">12</div>
-                    <span class="colon">:</span>
-                    <div class="custom-select-display small" onclick="openSelection('minute')" id="displayMinute">00</div>
-                    <div class="custom-select-display small" onclick="openSelection('ampm')" id="displayAmPm">AM</div>
+                <div class="input-group">
+                    <span class="lbl">Time</span>
+                    <input type="time" id="schedTimeInput" style="flex-grow:1; text-align:right; font-weight:bold; color-scheme:dark;">
                 </div>
 
                 <button onclick="addNewSchedule()" class="btn add-btn" style="margin-top:15px">Save Schedule</button>
             </div>
-        </div>
-    </div>
-
-    <div id="selectionModal" class="modal-overlay" style="z-index: 3000;">
-        <div class="modal-box rename-box">
-            <div class="modal-header"><h3 id="selectionTitle">Select</h3><i class="fas fa-times close-icon" onclick="closeModal('selectionModal')"></i></div>
-            <div id="selectionListContainer" class="rename-list-scroll">
-                </div>
         </div>
     </div>
 
