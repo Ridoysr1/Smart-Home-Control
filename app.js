@@ -13,6 +13,7 @@ const firebaseConfig = {
   appId: "1:1088125775954:web:743b9899cbcb7011966f8b"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
@@ -32,8 +33,11 @@ const ui = {
     authMsg: document.getElementById("authMsg")
 };
 
-// === 1. LOGIN LOGIC (Fixed) ===
-// সরাসরি ইভেন্ট লিসেনার যোগ করা হলো (DOMContentLoaded বাদ দিয়ে)
+// ==================================================
+// 1. SETUP EVENT LISTENERS (সরাসরি রান হবে)
+// ==================================================
+
+// Login Button
 const loginBtn = document.getElementById("loginBtn");
 if (loginBtn) {
     loginBtn.addEventListener("click", () => {
@@ -45,22 +49,22 @@ if (loginBtn) {
         msg.style.color = "#4fc3f7";
 
         signInWithEmailAndPassword(auth, email, pass)
-            .then(() => {
-                msg.textContent = "Success!";
-                msg.style.color = "#00e676";
-            })
             .catch((e) => {
                 console.error(e);
                 msg.style.color = "#ff1744";
-                if(e.code === 'auth/invalid-email') msg.textContent = "Invalid Email";
-                else if(e.code === 'auth/user-not-found') msg.textContent = "User Not Found";
-                else if(e.code === 'auth/wrong-password') msg.textContent = "Wrong Password";
+                // ইউজারকে সহজ ভাষায় এরর দেখানো
+                if (e.code === 'auth/invalid-email') msg.textContent = "Invalid Email";
+                else if (e.code === 'auth/user-not-found') msg.textContent = "User Not Found";
+                else if (e.code === 'auth/wrong-password') msg.textContent = "Wrong Password";
                 else msg.textContent = "Login Failed";
+                
+                // মোবাইল ডিবাগিংয়ের জন্য এলার্ট (দরকার হলে আনকমেন্ট করুন)
+                // alert(e.message);
             });
     });
 }
 
-// === 2. LOGOUT LOGIC ===
+// Logout Button
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
@@ -68,7 +72,68 @@ if (logoutBtn) {
     });
 }
 
-// === 3. AUTH STATE OBSERVER ===
+// Master Button
+const masterBtn = document.getElementById("masterBtn");
+if (masterBtn) {
+    masterBtn.addEventListener("click", () => {
+        let anyOn = false;
+        for (let i = 1; i <= 6; i++) {
+            const btn = document.getElementById("gpio" + i + "Btn");
+            if (btn && btn.classList.contains("on")) { anyOn = true; break; }
+        }
+        const action = anyOn ? "Turn OFF" : "Turn ON";
+        const val = anyOn ? 0 : 1;
+        showDialog("Master Control", `${action} All Switches?`, () => {
+            for (let i = 1; i <= 6; i++) set(ref(db, "/gpio" + i), val);
+        });
+    });
+}
+
+// Modal Triggers
+const openRenameBtn = document.getElementById("openRenameBtn");
+if (openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
+
+const openTimerBtn = document.getElementById("openTimerModalBtn");
+if (openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
+
+// Close Buttons
+document.querySelectorAll(".close-icon").forEach(icon => {
+    icon.addEventListener("click", function() {
+        this.closest(".modal-overlay").classList.remove("active");
+    });
+});
+
+// Add Schedule Button
+const addBtn = document.querySelector(".add-btn");
+if (addBtn) addBtn.addEventListener("click", addNewSchedule);
+
+// Theme Toggle
+const themeToggle = document.getElementById("themeToggle");
+if (themeToggle) {
+    if (localStorage.getItem("theme") === "light") {
+        document.body.classList.add("light-mode");
+        themeToggle.checked = false;
+    } else {
+        themeToggle.checked = true;
+    }
+    themeToggle.addEventListener("change", () => {
+        if (!themeToggle.checked) {
+            document.body.classList.add("light-mode");
+            localStorage.setItem("theme", "light");
+        } else {
+            document.body.classList.remove("light-mode");
+            localStorage.setItem("theme", "dark");
+        }
+    });
+}
+
+// Initialize Dropdowns
+populateTimeSelects();
+
+
+// ==================================================
+// 2. AUTH STATE (অটোমেটিক রান হবে)
+// ==================================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById("authBox").style.display = "none";
@@ -83,65 +148,83 @@ onAuthStateChanged(auth, (user) => {
         document.getElementById("authBox").style.display = "flex";
         document.getElementById("mainContent").style.display = "none";
         document.getElementById("bottomNav").style.display = "none";
-        if(ui.authMsg) ui.authMsg.textContent = "";
+        if (ui.authMsg) ui.authMsg.textContent = "";
     }
 });
 
-// === 4. MASTER BUTTON ===
-const masterBtn = document.getElementById("masterBtn");
-if(masterBtn) {
-    masterBtn.addEventListener("click", () => {
-        let anyOn = false;
-        for(let i=1; i<=6; i++) {
-            const btn = document.getElementById("gpio" + i + "Btn");
-            if(btn && btn.classList.contains("on")) { anyOn = true; break; }
+
+// ==================================================
+// 3. FIREBASE LISTENERS
+// ==================================================
+function startListeners() {
+    // Heartbeat
+    onValue(ref(db, "/lastSeen"), () => {
+        lastSeenTime = Date.now();
+        document.getElementById("statusBadge").className = "status-badge online";
+        document.getElementById("statusBadge").textContent = "Online";
+    });
+    setInterval(() => {
+        if (Date.now() - lastSeenTime > 15000) {
+            document.getElementById("statusBadge").className = "status-badge offline";
+            document.getElementById("statusBadge").textContent = "Offline";
         }
-        const action = anyOn ? "Turn OFF" : "Turn ON";
-        const val = anyOn ? 0 : 1;
-        showDialog("Master Control", `${action} All Switches?`, () => {
-            for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), val);
+    }, 1000);
+
+    // 6 Switch Loop
+    for (let i = 1; i <= 6; i++) {
+        const idx = i;
+        onValue(ref(db, "/gpio" + idx), (snap) => {
+            const val = snap.val();
+            const btn = document.getElementById("gpio" + idx + "Btn");
+            const txt = btn ? btn.querySelector(".status") : null;
+            if (btn) {
+                if (val === 1) { btn.classList.add("on"); if (txt) txt.textContent = "ON"; }
+                else { btn.classList.remove("on"); if (txt) txt.textContent = "OFF"; }
+            }
+            updateMasterButtonUI();
         });
+        onValue(ref(db, "/label" + idx), (snap) => {
+            if (snap.val()) {
+                deviceNames[idx - 1] = snap.val();
+                document.getElementById("name_gpio" + idx).textContent = snap.val();
+                let input = document.getElementById("rename" + idx);
+                if (input && document.activeElement !== input) input.value = snap.val();
+                if (tempSelection.device == idx) document.getElementById("displayDevice").textContent = snap.val();
+                renderList();
+            }
+        });
+        onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn" + idx] = snap.val(); renderList(); });
+        onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff" + idx] = snap.val(); renderList(); });
+    }
+
+    // Button Clicks
+    document.querySelectorAll(".gpio-button:not(.master-style)").forEach((btn) => {
+        btn.onclick = () => {
+            const key = btn.dataset.gpio;
+            const newState = btn.classList.contains("on") ? 0 : 1;
+            set(ref(db, "/" + key), newState);
+        };
     });
 }
 
-// === 5. INITIALIZATIONS ===
-// Theme Check
-const themeToggle = document.getElementById("themeToggle");
-if(themeToggle) {
-    if(localStorage.getItem("theme") === "light") { document.body.classList.add("light-mode"); themeToggle.checked = false; }
-    else { themeToggle.checked = true; }
-    themeToggle.addEventListener("change", () => {
-        if(!themeToggle.checked) { document.body.classList.add("light-mode"); localStorage.setItem("theme", "light"); }
-        else { document.body.classList.remove("light-mode"); localStorage.setItem("theme", "dark"); }
-    });
+function updateMasterButtonUI() {
+    let anyOn = false;
+    for (let i = 1; i <= 6; i++) if (document.getElementById("gpio" + i + "Btn").classList.contains("on")) anyOn = true;
+    document.getElementById("masterStatus").textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
-// Populate Time Arrays
-populateTimeSelects();
 
-// === 6. MODAL TRIGGERS ===
-const openRenameBtn = document.getElementById("openRenameBtn");
-if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
-
-const openTimerBtn = document.getElementById("openTimerModalBtn");
-if(openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
-
-document.querySelectorAll(".close-icon").forEach(icon => {
-    icon.addEventListener("click", function() {
-        this.closest(".modal-overlay").classList.remove("active");
-    });
-});
-
-
-// ================= HELPER FUNCTIONS (GLOBAL) =================
+// ==================================================
+// 4. GLOBAL FUNCTIONS & UTILS
+// ==================================================
 
 // Navigation
 window.switchTab = function(tabName) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
     const target = document.getElementById(tabName + 'Page');
-    if(target) target.classList.add('active-page');
+    if (target) target.classList.add('active-page');
     const radio = document.getElementById('tab-' + tabName);
-    if(radio) radio.checked = true;
+    if (radio) radio.checked = true;
 };
 
 // Popup Selection Logic
@@ -152,24 +235,24 @@ window.openSelection = function(type) {
     modal.classList.add("active");
 
     let options = [];
-    if(type === 'device') options = deviceNames.map((n, i) => ({ val: (i+1).toString(), text: n }));
-    else if(type === 'action') options = [{val: "On", text: "Turn ON"}, {val: "Off", text: "Turn OFF"}];
-    else if(type === 'hour') for(let i=1; i<=12; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
-    else if(type === 'minute') for(let i=0; i<60; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
-    else if(type === 'ampm') options = [{val: "AM", text: "AM"}, {val: "PM", text: "PM"}];
+    if (type === 'device') options = deviceNames.map((n, i) => ({ val: (i + 1).toString(), text: n }));
+    else if (type === 'action') options = [{ val: "On", text: "Turn ON" }, { val: "Off", text: "Turn OFF" }];
+    else if (type === 'hour') for (let i = 1; i <= 12; i++) options.push({ val: (i < 10 ? "0" + i : i).toString(), text: (i < 10 ? "0" + i : i).toString() });
+    else if (type === 'minute') for (let i = 0; i < 60; i++) options.push({ val: (i < 10 ? "0" + i : i).toString(), text: (i < 10 ? "0" + i : i).toString() });
+    else if (type === 'ampm') options = [{ val: "AM", text: "AM" }, { val: "PM", text: "PM" }];
 
     options.forEach(opt => {
         const div = document.createElement("div");
         div.className = "select-item";
-        if(tempSelection[type] == opt.val) div.classList.add("selected");
+        if (tempSelection[type] == opt.val) div.classList.add("selected");
         div.textContent = opt.text;
         div.onclick = () => {
             tempSelection[type] = opt.val;
-            if(type === 'device') document.getElementById("displayDevice").textContent = opt.text;
-            else if(type === 'action') document.getElementById("displayAction").textContent = opt.text;
-            else if(type === 'hour') document.getElementById("displayHour").textContent = opt.text;
-            else if(type === 'minute') document.getElementById("displayMinute").textContent = opt.text;
-            else if(type === 'ampm') document.getElementById("displayAmPm").textContent = opt.text;
+            if (type === 'device') document.getElementById("displayDevice").textContent = opt.text;
+            else if (type === 'action') document.getElementById("displayAction").textContent = opt.text;
+            else if (type === 'hour') document.getElementById("displayHour").textContent = opt.text;
+            else if (type === 'minute') document.getElementById("displayMinute").textContent = opt.text;
+            else if (type === 'ampm') document.getElementById("displayAmPm").textContent = opt.text;
             modal.classList.remove("active");
         };
         container.appendChild(div);
@@ -183,11 +266,11 @@ window.addNewSchedule = function() {
     let m = tempSelection.minute;
     let ap = tempSelection.ampm;
 
-    if(ap === "PM" && h < 12) h += 12;
-    if(ap === "AM" && h === 12) h = 0;
-    
-    let t = (h<10?"0"+h:h) + ":" + m;
-    set(ref(db, "/time"+a+d), t).then(() => {
+    if (ap === "PM" && h < 12) h += 12;
+    if (ap === "AM" && h === 12) h = 0;
+
+    let t = (h < 10 ? "0" + h : h) + ":" + m;
+    set(ref(db, "/time" + a + d), t).then(() => {
         document.getElementById("timerModal").classList.remove("active");
         alert("Timer Set!");
     });
@@ -195,89 +278,38 @@ window.addNewSchedule = function() {
 
 window.saveNameManually = function(id) {
     const val = document.getElementById("rename" + id).value;
-    if(val) set(ref(db, "/label" + id), val);
+    if (val) set(ref(db, "/label" + id), val);
 };
 
-window.closeModal = function(id) { document.getElementById(id).classList.remove("active"); };
-
-// Listeners
-function startListeners() {
-    onValue(ref(db, "/lastSeen"), () => {
-        lastSeenTime = Date.now();
-        document.getElementById("statusBadge").className = "status-badge online";
-        document.getElementById("statusBadge").textContent = "Online";
-    });
-    setInterval(() => {
-        if(Date.now() - lastSeenTime > 15000) {
-            document.getElementById("statusBadge").className = "status-badge offline";
-            document.getElementById("statusBadge").textContent = "Offline";
-        }
-    }, 1000);
-
-    for(let i=1; i<=6; i++) {
-        const idx = i;
-        onValue(ref(db, "/gpio" + idx), (snap) => {
-            const val = snap.val();
-            const btn = document.getElementById("gpio" + idx + "Btn");
-            const txt = btn ? btn.querySelector(".status") : null;
-            if(btn) {
-                if(val === 1) { btn.classList.add("on"); if(txt) txt.textContent="ON"; } 
-                else { btn.classList.remove("on"); if(txt) txt.textContent="OFF"; }
-            }
-            updateMasterButtonUI();
-        });
-        onValue(ref(db, "/label" + idx), (snap) => {
-            if(snap.val()) {
-                deviceNames[idx-1] = snap.val();
-                document.getElementById("name_gpio" + idx).textContent = snap.val();
-                let input = document.getElementById("rename" + idx);
-                if(input && document.activeElement !== input) input.value = snap.val();
-                if(tempSelection.device == idx) document.getElementById("displayDevice").textContent = snap.val();
-                renderList();
-            }
-        });
-        onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn"+idx] = snap.val(); renderList(); });
-        onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff"+idx] = snap.val(); renderList(); });
-    }
-
-    document.querySelectorAll(".gpio-button:not(.master-style)").forEach((btn) => {
-        btn.onclick = () => {
-            const key = btn.dataset.gpio;
-            const newState = btn.classList.contains("on") ? 0 : 1;
-            set(ref(db, "/" + key), newState);
-        };
-    });
-}
-
-function updateMasterButtonUI() {
-    let anyOn = false;
-    for(let i=1; i<=6; i++) if(document.getElementById("gpio"+i+"Btn").classList.contains("on")) anyOn = true;
-    document.getElementById("masterStatus").textContent = anyOn ? "ALL OFF" : "ALL ON";
-}
+window.closeModal = function(id) {
+    document.getElementById(id).classList.remove("active");
+};
 
 function populateTimeSelects() {
-    // Only internal logic needed, HTML is divs now
+    // Logic handled by custom divs now, keeping function if needed later
 }
 
 function updateDropdown() {
-    // No dropdown to update, custom div handles it
+    // Handled by deviceNames array
 }
 
 function renderList() {
-    const c = document.getElementById("scheduleListContainer"); c.innerHTML = "";
-    for(let i=1; i<=6; i++) {
-        let n = deviceNames[i-1] || "SW "+i;
-        if(activeTimers["timeOn"+i]) addItem(c, i, "On", activeTimers["timeOn"+i], n);
-        if(activeTimers["timeOff"+i]) addItem(c, i, "Off", activeTimers["timeOff"+i], n);
+    const c = document.getElementById("scheduleListContainer");
+    if (!c) return;
+    c.innerHTML = "";
+    for (let i = 1; i <= 6; i++) {
+        let n = deviceNames[i - 1] || "SW " + i;
+        if (activeTimers["timeOn" + i]) addItem(c, i, "On", activeTimers["timeOn" + i], n);
+        if (activeTimers["timeOff" + i]) addItem(c, i, "Off", activeTimers["timeOff" + i], n);
     }
 }
 
 function addItem(c, i, act, time, name) {
     let [H, M] = time.split(":"); H = parseInt(H);
     let ampm = H >= 12 ? "PM" : "AM"; H = H % 12; H = H ? H : 12;
-    let niceTime = (H<10?"0"+H:H) + ":" + M + " " + ampm;
-    let color = act==="On"?"#00e676":"#ff1744";
-    
+    let niceTime = (H < 10 ? "0" + H : H) + ":" + M + " " + ampm;
+    let color = act === "On" ? "#00e676" : "#ff1744";
+
     c.innerHTML += `
     <div class="schedule-item">
         <div class="schedule-info">
@@ -288,13 +320,18 @@ function addItem(c, i, act, time, name) {
     </div>`;
 }
 
-window.delT = (i, a) => { if(confirm("Delete timer?")) set(ref(db, "/time"+a+i), ""); };
+window.delT = (i, a) => {
+    if (confirm("Delete timer?")) set(ref(db, "/time" + a + i), "");
+};
 
 // Modal
 const modal = document.getElementById("customModal");
 let onConfirm = null;
-function showDialog(t, m, cb) { 
-    document.getElementById("modalTitle").textContent=t; document.getElementById("modalMessage").textContent=m; onConfirm=cb; modal.classList.add("active"); 
+function showDialog(t, m, cb) {
+    document.getElementById("modalTitle").textContent = t;
+    document.getElementById("modalMessage").textContent = m;
+    onConfirm = cb;
+    modal.classList.add("active");
 }
 document.getElementById("btnCancel").onclick = () => modal.classList.remove("active");
-document.getElementById("btnConfirm").onclick = () => { if(onConfirm) onConfirm(); modal.classList.remove("active"); };
+document.getElementById("btnConfirm").onclick = () => { if (onConfirm) onConfirm(); modal.classList.remove("active"); };
