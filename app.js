@@ -20,7 +20,7 @@ const db = getDatabase(app);
 let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
 let activeTimers = {};
 let lastSeenTime = 0;
-let tempSelection = { device: "1", action: "On" };
+let tempSelection = { device: "1", action: "On", hour: "12", minute: "00", ampm: "AM" };
 
 document.addEventListener("DOMContentLoaded", () => {
     // LOGIN
@@ -41,9 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const openRenameBtn = document.getElementById("openRenameBtn");
     if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
     
+    // TIMER BUTTON FIX (Chrome Compatible)
     const openTimerBtn = document.getElementById("openTimerModalBtn");
     if(openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
 
+    // CLOSE BUTTONS
     document.querySelectorAll(".close-icon").forEach(icon => {
         icon.addEventListener("click", function() {
             this.closest(".modal-overlay").classList.remove("active");
@@ -61,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // MASTER
+    // MASTER BUTTON
     const masterBtn = document.getElementById("masterBtn");
     if(masterBtn) {
         masterBtn.addEventListener("click", () => {
@@ -79,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// POPUP LIST LOGIC
+// --- POPUP LIST LOGIC (Custom Select) ---
 window.openSelection = function(type) {
     const modal = document.getElementById("selectionModal");
     const title = document.getElementById("selectionTitle");
@@ -97,6 +99,18 @@ window.openSelection = function(type) {
         title.textContent = "Select Action";
         options = [{val: "On", text: "Turn ON"}, {val: "Off", text: "Turn OFF"}];
     }
+    else if(type === 'hour') {
+        title.textContent = "Select Hour";
+        for(let i=1; i<=12; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
+    }
+    else if(type === 'minute') {
+        title.textContent = "Select Minute";
+        for(let i=0; i<60; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
+    }
+    else if(type === 'ampm') {
+        title.textContent = "Select AM/PM";
+        options = [{val: "AM", text: "AM"}, {val: "PM", text: "PM"}];
+    }
 
     options.forEach(opt => {
         const div = document.createElement("div");
@@ -105,8 +119,14 @@ window.openSelection = function(type) {
         div.textContent = opt.text;
         div.onclick = () => {
             tempSelection[type] = opt.val;
+            
+            // Update Display Text
             if(type === 'device') document.getElementById("displayDevice").textContent = opt.text;
             else if(type === 'action') document.getElementById("displayAction").textContent = opt.text;
+            else if(type === 'hour') document.getElementById("displayHour").textContent = opt.text;
+            else if(type === 'minute') document.getElementById("displayMinute").textContent = opt.text;
+            else if(type === 'ampm') document.getElementById("displayAmPm").textContent = opt.text;
+            
             modal.classList.remove("active");
         };
         container.appendChild(div);
@@ -116,10 +136,14 @@ window.openSelection = function(type) {
 window.addNewSchedule = function() {
     let d = tempSelection.device;
     let a = tempSelection.action;
-    let t = document.getElementById("schedTimeInput").value; // Native Time Input
+    let h = parseInt(tempSelection.hour);
+    let m = tempSelection.minute;
+    let ap = tempSelection.ampm;
 
-    if(!t) { alert("Please select time"); return; }
+    if(ap === "PM" && h < 12) h += 12;
+    if(ap === "AM" && h === 12) h = 0;
     
+    let t = (h<10?"0"+h:h) + ":" + m;
     set(ref(db, "/time"+a+d), t).then(() => {
         document.getElementById("timerModal").classList.remove("active");
         alert("Timer Set Successfully!");
