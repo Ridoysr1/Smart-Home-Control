@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Smart Home</title>
+    
     <link rel="stylesheet" href="styles.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -17,7 +19,7 @@
     </div>
 
     <div id="authBox" class="auth-screen">
-        <h2>Welcome</h2>
+        <h2>Welcome Back</h2>
         <input id="emailField" type="email" placeholder="Email Address" />
         <input id="passwordField" type="password" placeholder="Password" />
         <button id="loginBtn" class="btn login-btn">Sign In</button>
@@ -29,17 +31,20 @@
         <div id="homePage" class="page-content active-page">
             <div class="switch-grid-container">
                 <div class="button-grid">
-                    <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1"><div class="btn-top"><span id="name_gpio1" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2"><div class="btn-top"><span id="name_gpio2" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3"><div class="btn-top"><span id="name_gpio3" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4"><div class="btn-top"><span id="name_gpio4" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5"><div class="btn-top"><span id="name_gpio5" class="device-name">...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio6Btn" class="gpio-button" data-gpio="gpio6"><div class="btn-top"><span id="name_gpio6" class="device-name">...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1"><div class="btn-top"><span id="name_gpio1" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2"><div class="btn-top"><span id="name_gpio2" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3"><div class="btn-top"><span id="name_gpio3" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4"><div class="btn-top"><span id="name_gpio4" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5"><div class="btn-top"><span id="name_gpio5" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <button id="gpio6Btn" class="gpio-button" data-gpio="gpio6"><div class="btn-top"><span id="name_gpio6" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
                 </div>
                 
                 <div class="master-container">
                     <button id="masterBtn" class="gpio-button master-style">
-                        <div class="btn-top"><i class="fas fa-power-off" style="color: #ff9800;"></i><span class="device-name" style="color: #ff9800;">MASTER</span></div>
+                        <div class="btn-top">
+                            <i class="fas fa-power-off" style="color: #ff9800;"></i>
+                            <span class="device-name" style="color: #ff9800;">MASTER</span>
+                        </div>
                         <span id="masterStatus" class="status">ALL ON</span>
                     </button>
                 </div>
@@ -48,18 +53,38 @@
 
         <div id="timerPage" class="page-content">
             <div class="add-schedule-form">
-                <h3>New Timer</h3>
+                <h3>Set New Timer</h3>
+                
                 <label>Select Device</label>
-                <select id="schedDeviceSelect">
-                    <option value="1">Switch 1</option><option value="2">Switch 2</option><option value="3">Switch 3</option>
-                    <option value="4">Switch 4</option><option value="5">Switch 5</option><option value="6">Switch 6</option>
-                </select>
+                <select id="schedDeviceSelect"></select>
+
                 <div class="row-inputs">
-                    <div class="half"><label>Action</label><select id="schedActionSelect"><option value="On">Turn ON</option><option value="Off">Turn OFF</option></select></div>
-                    <div class="half"><label>Time</label><div class="digital-time-box"><select id="schedHour"></select><span class="colon">:</span><select id="schedMinute"></select><select id="schedAmPm"><option>AM</option><option>PM</option></select></div></div>
+                    <div class="half">
+                        <label>Action</label>
+                        <select id="schedActionSelect">
+                            <option value="On">Turn ON</option>
+                            <option value="Off">Turn OFF</option>
+                        </select>
+                    </div>
+                    
+                    <div class="half">
+                        <label>Time</label>
+                        <div class="digital-time-box">
+                            <select id="schedHour"></select>
+                            <span class="colon">:</span>
+                            <select id="schedMinute"></select>
+                            <select id="schedAmPm">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <button onclick="addNewSchedule()" class="btn add-btn"><i class="fas fa-plus-circle"></i> Add Schedule</button>
+                <button onclick="addNewSchedule()" class="btn add-btn">
+                    <i class="fas fa-plus-circle"></i> Add Schedule
+                </button>
             </div>
+
             <div class="list-header">Active Schedules</div>
             <div id="scheduleListContainer" class="schedule-list"></div>
         </div>
@@ -88,34 +113,56 @@
                 </div>
             </div>
 
-            <button id="logoutBtn" class="btn logout-btn"><i class="fas fa-sign-out-alt"></i> Logout System</button>
+            <button id="logoutBtn" class="btn logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout System
+            </button>
         </div>
 
     </div> 
-    <div id="bottomNav" class="bottom-nav" style="display:none;">
-        <div class="nav-item active" onclick="switchTab('home')">
-            <div class="nav-icon"><i class="fas fa-home"></i></div>
-            <span class="nav-text">Home</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('timer')">
-            <div class="nav-icon"><i class="fas fa-clock"></i></div>
-            <span class="nav-text">Timer</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('settings')">
-            <div class="nav-icon"><i class="fas fa-cog"></i></div>
-            <span class="nav-text">Settings</span>
+    <div id="bottomNav" class="bottom-nav-wrapper" style="display:none;">
+        <div class="flip-switch">
+            
+            <input type="radio" id="tab-home" name="nav-tab" checked onchange="switchTab('home')">
+            <input type="radio" id="tab-timer" name="nav-tab" onchange="switchTab('timer')">
+            <input type="radio" id="tab-settings" name="nav-tab" onchange="switchTab('settings')">
+
+            <label for="tab-home" class="switch-button">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </label>
+
+            <label for="tab-timer" class="switch-button">
+                <i class="fas fa-clock"></i>
+                <span>Timer</span>
+            </label>
+
+            <label for="tab-settings" class="switch-button">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </label>
+
+            <div class="switch-card">
+                <div class="card-face"></div>
+            </div>
+
         </div>
     </div>
 
     <div id="customModal" class="modal-overlay">
         <div class="modal-box">
-            <i class="fas fa-question-circle modal-icon"></i><h3 id="modalTitle">Confirm</h3><p id="modalMessage">Sure?</p>
-            <div class="modal-actions"><button id="btnCancel" class="modal-btn cancel">No</button><button id="btnConfirm" class="modal-btn confirm">Yes</button></div>
+            <i class="fas fa-question-circle modal-icon"></i>
+            <h3 id="modalTitle">Confirm</h3>
+            <p id="modalMessage">Are you sure?</p>
+            <div class="modal-actions">
+                <button id="btnCancel" class="modal-btn cancel">No</button>
+                <button id="btnConfirm" class="modal-btn confirm">Yes</button>
+            </div>
         </div>
     </div>
 
 </div>
 
 <script type="module" src="app.js"></script>
+
 </body>
 </html>
