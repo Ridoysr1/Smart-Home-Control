@@ -28,18 +28,61 @@
         
         <div id="homePage" class="page-content active-page">
             <div class="switch-grid-container">
+                
                 <div class="button-grid">
-                    <button id="gpio1Btn" class="gpio-button" data-gpio="gpio1"><div class="btn-top"><span id="name_gpio1" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio2Btn" class="gpio-button" data-gpio="gpio2"><div class="btn-top"><span id="name_gpio2" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio3Btn" class="gpio-button" data-gpio="gpio3"><div class="btn-top"><span id="name_gpio3" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio4Btn" class="gpio-button" data-gpio="gpio4"><div class="btn-top"><span id="name_gpio4" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio5Btn" class="gpio-button" data-gpio="gpio5"><div class="btn-top"><span id="name_gpio5" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
-                    <button id="gpio6Btn" class="gpio-button" data-gpio="gpio6"><div class="btn-top"><span id="name_gpio6" class="device-name">Loading...</span></div><span class="status">OFF</span></button>
+                    <div class="switch-card-item">
+                        <span id="name_gpio1" class="device-name">Loading...</span>
+                        <input type="checkbox" id="gpio1" class="gpio-checkbox" data-gpio="gpio1">
+                        <label for="gpio1" class="toggle-container">
+                            <div class="toggle-knob"></div>
+                        </label>
+                    </div>
+
+                    <div class="switch-card-item">
+                        <span id="name_gpio2" class="device-name">Loading...</span>
+                        <input type="checkbox" id="gpio2" class="gpio-checkbox" data-gpio="gpio2">
+                        <label for="gpio2" class="toggle-container">
+                            <div class="toggle-knob"></div>
+                        </label>
+                    </div>
+
+                    <div class="switch-card-item">
+                        <span id="name_gpio3" class="device-name">Loading...</span>
+                        <input type="checkbox" id="gpio3" class="gpio-checkbox" data-gpio="gpio3">
+                        <label for="gpio3" class="toggle-container">
+                            <div class="toggle-knob"></div>
+                        </label>
+                    </div>
+
+                    <div class="switch-card-item">
+                        <span id="name_gpio4" class="device-name">Loading...</span>
+                        <input type="checkbox" id="gpio4" class="gpio-checkbox" data-gpio="gpio4">
+                        <label for="gpio4" class="toggle-container">
+                            <div class="toggle-knob"></div>
+                        </label>
+                    </div>
+
+                    <div class="switch-card-item">
+                        <span id="name_gpio5" class="device-name">Loading...</span>
+                        <input type="checkbox" id="gpio5" class="gpio-checkbox" data-gpio="gpio5">
+                        <label for="gpio5" class="toggle-container">
+                            <div class="toggle-knob"></div>
+                        </label>
+                    </div>
+
+                    <div class="switch-card-item">
+                        <span id="name_gpio6" class="device-name">Loading...</span>
+                        <input type="checkbox" id="gpio6" class="gpio-checkbox" data-gpio="gpio6">
+                        <label for="gpio6" class="toggle-container">
+                            <div class="toggle-knob"></div>
+                        </label>
+                    </div>
                 </div>
+
                 <div class="master-container">
-                    <button id="masterBtn" class="gpio-button master-style">
-                        <div class="btn-top"><i class="fas fa-power-off" style="color:#ff9800"></i><span class="device-name" style="color:#ff9800"> MASTER</span></div>
-                        <span id="masterStatus" class="status">ALL ON</span>
+                    <button id="masterBtn" class="master-style">
+                        <i class="fas fa-power-off"></i> MASTER CONTROL
+                        <span id="masterStatus">ALL ON</span>
                     </button>
                 </div>
             </div>
