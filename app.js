@@ -34,7 +34,7 @@ const ui = {
 };
 
 // ==================================================
-// 1. SETUP EVENT LISTENERS
+// 1. SETUP EVENT LISTENERS (সরাসরি রান হবে)
 // ==================================================
 
 // Login Button
@@ -51,14 +51,15 @@ if (loginBtn) {
         signInWithEmailAndPassword(auth, email, pass)
             .catch((e) => {
                 console.error(e);
-                // ERROR ALERT ADDED
-                alert("Login Error: " + e.message); 
-                
                 msg.style.color = "#ff1744";
+                // ইউজারকে সহজ ভাষায় এরর দেখানো
                 if (e.code === 'auth/invalid-email') msg.textContent = "Invalid Email";
                 else if (e.code === 'auth/user-not-found') msg.textContent = "User Not Found";
                 else if (e.code === 'auth/wrong-password') msg.textContent = "Wrong Password";
                 else msg.textContent = "Login Failed";
+                
+                // মোবাইল ডিবাগিংয়ের জন্য এলার্ট (দরকার হলে আনকমেন্ট করুন)
+                // alert(e.message);
             });
     });
 }
@@ -76,15 +77,12 @@ const masterBtn = document.getElementById("masterBtn");
 if (masterBtn) {
     masterBtn.addEventListener("click", () => {
         let anyOn = false;
-        // Check current class "on" (Matches your original working logic)
         for (let i = 1; i <= 6; i++) {
             const btn = document.getElementById("gpio" + i + "Btn");
             if (btn && btn.classList.contains("on")) { anyOn = true; break; }
         }
-        
         const action = anyOn ? "Turn OFF" : "Turn ON";
         const val = anyOn ? 0 : 1;
-        
         showDialog("Master Control", `${action} All Switches?`, () => {
             for (let i = 1; i <= 6; i++) set(ref(db, "/gpio" + i), val);
         });
@@ -134,7 +132,7 @@ populateTimeSelects();
 
 
 // ==================================================
-// 2. AUTH STATE
+// 2. AUTH STATE (অটোমেটিক রান হবে)
 // ==================================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -156,7 +154,7 @@ onAuthStateChanged(auth, (user) => {
 
 
 // ==================================================
-// 3. FIREBASE LISTENERS (RESTORED BUTTON LOGIC)
+// 3. FIREBASE LISTENERS
 // ==================================================
 function startListeners() {
     // Heartbeat
@@ -175,24 +173,16 @@ function startListeners() {
     // 6 Switch Loop
     for (let i = 1; i <= 6; i++) {
         const idx = i;
-        
-        // Switch Logic (Matches Original File)
         onValue(ref(db, "/gpio" + idx), (snap) => {
             const val = snap.val();
             const btn = document.getElementById("gpio" + idx + "Btn");
-            
+            const txt = btn ? btn.querySelector(".status") : null;
             if (btn) {
-                // '==' handles string "1" vs number 1 issue silently
-                if (val == 1) { 
-                    btn.classList.add("on"); 
-                } else { 
-                    btn.classList.remove("on"); 
-                }
+                if (val === 1) { btn.classList.add("on"); if (txt) txt.textContent = "ON"; }
+                else { btn.classList.remove("on"); if (txt) txt.textContent = "OFF"; }
             }
             updateMasterButtonUI();
         });
-
-        // Label Logic
         onValue(ref(db, "/label" + idx), (snap) => {
             if (snap.val()) {
                 deviceNames[idx - 1] = snap.val();
@@ -203,14 +193,11 @@ function startListeners() {
                 renderList();
             }
         });
-        
-        // Timer Logic
         onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn" + idx] = snap.val(); renderList(); });
         onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff" + idx] = snap.val(); renderList(); });
     }
 
-    // Button Click Logic (Matches Original File)
-    // We use .gpio-button selector, but exclude master-style
+    // Button Clicks
     document.querySelectorAll(".gpio-button:not(.master-style)").forEach((btn) => {
         btn.onclick = () => {
             const key = btn.dataset.gpio;
@@ -222,12 +209,8 @@ function startListeners() {
 
 function updateMasterButtonUI() {
     let anyOn = false;
-    for (let i = 1; i <= 6; i++) {
-        const btn = document.getElementById("gpio" + i + "Btn");
-        if (btn && btn.classList.contains("on")) anyOn = true;
-    }
-    const txt = document.getElementById("masterStatus");
-    if(txt) txt.textContent = anyOn ? "ALL OFF" : "ALL ON";
+    for (let i = 1; i <= 6; i++) if (document.getElementById("gpio" + i + "Btn").classList.contains("on")) anyOn = true;
+    document.getElementById("masterStatus").textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
 
@@ -303,7 +286,11 @@ window.closeModal = function(id) {
 };
 
 function populateTimeSelects() {
-    // Logic handled by custom divs now
+    // Logic handled by custom divs now, keeping function if needed later
+}
+
+function updateDropdown() {
+    // Handled by deviceNames array
 }
 
 function renderList() {
@@ -337,7 +324,7 @@ window.delT = (i, a) => {
     if (confirm("Delete timer?")) set(ref(db, "/time" + a + i), "");
 };
 
-// Modal Helper
+// Modal
 const modal = document.getElementById("customModal");
 let onConfirm = null;
 function showDialog(t, m, cb) {
@@ -348,4 +335,3 @@ function showDialog(t, m, cb) {
 }
 document.getElementById("btnCancel").onclick = () => modal.classList.remove("active");
 document.getElementById("btnConfirm").onclick = () => { if (onConfirm) onConfirm(); modal.classList.remove("active"); };
-
