@@ -109,7 +109,7 @@
 
     <div id="renameModal" class="modal-overlay">
         <div class="modal-box rename-box">
-            <div class="modal-header"><h3>Edit Names</h3><i class="fas fa-times close-icon"></i></div>
+            <div class="modal-header"><h3>Edit Names</h3><i class="fas fa-times close-icon" onclick="closeModal('renameModal')"></i></div>
             <div class="rename-list-scroll">
                 <div class="input-group"><span class="lbl">SW1</span><input type="text" id="rename1"><button class="save-btn" onclick="saveNameManually(1)"><i class="fas fa-save"></i></button></div>
                 <div class="input-group"><span class="lbl">SW2</span><input type="text" id="rename2"><button class="save-btn" onclick="saveNameManually(2)"><i class="fas fa-save"></i></button></div>
@@ -123,28 +123,36 @@
 
     <div id="timerModal" class="modal-overlay">
         <div class="modal-box rename-box">
-            <div class="modal-header"><h3>Set Timer</h3><i class="fas fa-times close-icon"></i></div>
+            <div class="modal-header"><h3>Set Timer</h3><i class="fas fa-times close-icon" onclick="closeModal('timerModal')"></i></div>
             
             <div class="rename-list-scroll">
-                <div class="input-group">
-                    <span class="lbl" style="width:60px">Device</span>
-                    <select id="schedDeviceSelect" style="flex-grow:1"></select>
+                <div class="custom-select-wrapper" onclick="openSelection('device')">
+                    <span class="lbl">Device</span>
+                    <div class="custom-select-display" id="displayDevice">Switch 1</div>
                 </div>
-                <div class="input-group">
-                    <span class="lbl" style="width:60px">Action</span>
-                    <select id="schedActionSelect" style="flex-grow:1">
-                        <option value="On">Turn ON</option>
-                        <option value="Off">Turn OFF</option>
-                    </select>
+
+                <div class="custom-select-wrapper" onclick="openSelection('action')">
+                    <span class="lbl">Action</span>
+                    <div class="custom-select-display" id="displayAction">Turn ON</div>
                 </div>
-                <div class="input-group">
-                    <span class="lbl" style="width:60px">Time</span>
-                    <div class="digital-time-box" style="flex-grow:1">
-                        <select id="schedHour"></select><span class="colon">:</span><select id="schedMinute"></select><select id="schedAmPm"><option>AM</option><option>PM</option></select>
-                    </div>
+
+                <div class="time-picker-row">
+                    <div class="custom-select-display small" onclick="openSelection('hour')" id="displayHour">12</div>
+                    <span class="colon">:</span>
+                    <div class="custom-select-display small" onclick="openSelection('minute')" id="displayMinute">00</div>
+                    <div class="custom-select-display small" onclick="openSelection('ampm')" id="displayAmPm">AM</div>
                 </div>
-                <button onclick="addNewSchedule()" class="btn add-btn" style="margin-top:10px">Save Schedule</button>
+
+                <button onclick="addNewSchedule()" class="btn add-btn" style="margin-top:15px">Save Schedule</button>
             </div>
+        </div>
+    </div>
+
+    <div id="selectionModal" class="modal-overlay" style="z-index: 3000;">
+        <div class="modal-box rename-box">
+            <div class="modal-header"><h3 id="selectionTitle">Select</h3><i class="fas fa-times close-icon" onclick="closeModal('selectionModal')"></i></div>
+            <div id="selectionListContainer" class="rename-list-scroll">
+                </div>
         </div>
     </div>
 
