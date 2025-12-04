@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
+const firebaseConfig = {
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDxkigmr_aFKfkcA40tYxkJ7uNFxtmg34s",
@@ -12,7 +13,6 @@ const firebaseConfig = {
   messagingSenderId: "1088125775954",
   appId: "1:1088125775954:web:743b9899cbcb7011966f8b"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
@@ -20,7 +20,7 @@ const db = getDatabase(app);
 let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
 let activeTimers = {};
 let lastSeenTime = 0;
-let tempSelection = { device: "1", action: "On", hour: "12", minute: "00", ampm: "AM" };
+let tempSelection = { device: "1", action: "On" };
 
 document.addEventListener("DOMContentLoaded", () => {
     // LOGIN
@@ -37,14 +37,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const logoutBtn = document.getElementById("logoutBtn");
     if(logoutBtn) logoutBtn.addEventListener("click", () => showDialog("Exit", "Logout system?", () => signOut(auth)));
 
-    // MODAL TRIGGERS
+    // MODALS
     const openRenameBtn = document.getElementById("openRenameBtn");
     if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
     
     const openTimerBtn = document.getElementById("openTimerModalBtn");
     if(openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
 
-    // CLOSE BUTTONS
     document.querySelectorAll(".close-icon").forEach(icon => {
         icon.addEventListener("click", function() {
             this.closest(".modal-overlay").classList.remove("active");
@@ -62,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // MASTER BUTTON
+    // MASTER
     const masterBtn = document.getElementById("masterBtn");
     if(masterBtn) {
         masterBtn.addEventListener("click", () => {
@@ -80,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// --- POPUP LIST LOGIC ---
+// POPUP LIST LOGIC
 window.openSelection = function(type) {
     const modal = document.getElementById("selectionModal");
     const title = document.getElementById("selectionTitle");
@@ -98,18 +97,6 @@ window.openSelection = function(type) {
         title.textContent = "Select Action";
         options = [{val: "On", text: "Turn ON"}, {val: "Off", text: "Turn OFF"}];
     }
-    else if(type === 'hour') {
-        title.textContent = "Select Hour";
-        for(let i=1; i<=12; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
-    }
-    else if(type === 'minute') {
-        title.textContent = "Select Minute";
-        for(let i=0; i<60; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
-    }
-    else if(type === 'ampm') {
-        title.textContent = "Select AM/PM";
-        options = [{val: "AM", text: "AM"}, {val: "PM", text: "PM"}];
-    }
 
     options.forEach(opt => {
         const div = document.createElement("div");
@@ -118,14 +105,8 @@ window.openSelection = function(type) {
         div.textContent = opt.text;
         div.onclick = () => {
             tempSelection[type] = opt.val;
-            
-            // Update Display Text
             if(type === 'device') document.getElementById("displayDevice").textContent = opt.text;
             else if(type === 'action') document.getElementById("displayAction").textContent = opt.text;
-            else if(type === 'hour') document.getElementById("displayHour").textContent = opt.text;
-            else if(type === 'minute') document.getElementById("displayMinute").textContent = opt.text;
-            else if(type === 'ampm') document.getElementById("displayAmPm").textContent = opt.text;
-            
             modal.classList.remove("active");
         };
         container.appendChild(div);
@@ -135,21 +116,17 @@ window.openSelection = function(type) {
 window.addNewSchedule = function() {
     let d = tempSelection.device;
     let a = tempSelection.action;
-    let h = parseInt(tempSelection.hour);
-    let m = tempSelection.minute;
-    let ap = tempSelection.ampm;
+    let t = document.getElementById("schedTimeInput").value; // Native Time Input
 
-    if(ap === "PM" && h < 12) h += 12;
-    if(ap === "AM" && h === 12) h = 0;
+    if(!t) { alert("Please select time"); return; }
     
-    let t = (h<10?"0"+h:h) + ":" + m;
     set(ref(db, "/time"+a+d), t).then(() => {
         document.getElementById("timerModal").classList.remove("active");
         alert("Timer Set Successfully!");
     });
 };
 
-// --- AUTH & LISTENERS ---
+// SHARED LOGIC
 onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById("authBox").style.display = "none";
@@ -218,7 +195,6 @@ function updateMasterButtonUI() {
     document.getElementById("masterStatus").textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
-// --- UTILS ---
 window.switchTab = function(tabName) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
     document.getElementById(tabName + 'Page').classList.add('active-page');
@@ -259,7 +235,6 @@ function addItem(c, i, act, time, name) {
 
 window.delT = (i, a) => { if(confirm("Delete timer?")) set(ref(db, "/time"+a+i), ""); };
 
-// Modal
 const modal = document.getElementById("customModal");
 let onConfirm = null;
 function showDialog(t, m, cb) { 
