@@ -13,75 +13,101 @@ const firebaseConfig = {
   appId: "1:1088125775954:web:743b9899cbcb7011966f8b"
 };
 
+// অ্যাপ ইনিশিয়ালাইজ
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-// Global Variables
+// ভেরিয়েবল
 let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
 let activeTimers = {};
 let lastSeenTime = 0;
 let tempSelection = { device: "1", action: "On", hour: "12", minute: "00", ampm: "AM" };
 
-// === DOM LOADED ===
+// পেজ লোড হওয়ার পর
 document.addEventListener("DOMContentLoaded", () => {
     
-    // --- 1. LOGIN LOGIC (DEBUG MODE) ---
+    // --- LOGIN DEBUGGING ---
     const loginBtn = document.getElementById("loginBtn");
+    
     if(loginBtn) {
         loginBtn.addEventListener("click", () => {
             const email = document.getElementById("emailField").value;
             const pass = document.getElementById("passwordField").value;
             const msg = document.getElementById("authMsg");
 
-            // ইনপুট চেক
-            if(!email || !pass) {
-                msg.textContent = "Please enter email & password!";
-                msg.style.color = "#ff1744";
+            // খালি ঘর চেক
+            if (!email || !pass) {
+                alert("Please enter both Email and Password!");
                 return;
             }
 
             msg.textContent = "Checking...";
-            msg.style.color = "#4fc3f7"; // নীল রং
+            msg.style.color = "#4fc3f7";
 
-            // ফায়ারবেস লগইন রিকোয়েস্ট
             signInWithEmailAndPassword(auth, email, pass)
                 .then((userCredential) => {
-                    // সফল হলে
-                    msg.textContent = "Success! Loading...";
-                    msg.style.color = "#00e676"; // সবুজ রং
+                    msg.textContent = "Login Successful!";
+                    msg.style.color = "#00e676";
+                    console.log("User Logged In:", userCredential.user.email);
                 })
                 .catch((error) => {
-                    // এরর হলে পরিষ্কার কারণ দেখানো
-                    console.error("Login Error:", error);
-                    msg.style.color = "#ff1744"; // লাল রং
+                    console.error("Login Failed:", error);
+                    msg.style.color = "#ff1744";
                     
-                    if (error.code === 'auth/invalid-email') {
-                        msg.textContent = "Invalid Email Address!";
+                    // এরর মেসেজ দেখানো
+                    if (error.code === 'auth/invalid-api-key') {
+                        msg.textContent = "Config Error: Invalid API Key";
+                        alert("আপনার কোডে API Key ভুল আছে। app.js চেক করুন।");
+                    } else if (error.code === 'auth/invalid-email') {
+                        msg.textContent = "Invalid Email";
+                        alert("ইমেইল অ্যাড্রেস সঠিক নয়।");
                     } else if (error.code === 'auth/user-not-found') {
-                        msg.textContent = "User Not Found! Create user in Firebase.";
+                        msg.textContent = "User Not Found";
+                        alert("এই ইমেইলে কোনো ইউজার নেই। ফায়ারবেসে ইউজার অ্যাড করুন।");
                     } else if (error.code === 'auth/wrong-password') {
-                        msg.textContent = "Incorrect Password!";
+                        msg.textContent = "Wrong Password";
+                        alert("পাসওয়ার্ড ভুল হয়েছে।");
                     } else if (error.code === 'auth/network-request-failed') {
-                        msg.textContent = "Network Error! Check Internet.";
-                    } else if (error.code === 'auth/invalid-api-key') {
-                        msg.textContent = "Invalid API Key in Code!";
+                        msg.textContent = "Network Error";
+                        alert("ইন্টারনেট কানেকশন চেক করুন।");
                     } else {
-                        msg.textContent = error.message; // অন্যান্য এরর
+                        msg.textContent = "Error: " + error.code;
+                        alert("Error: " + error.message);
                     }
                 });
         });
     }
 
-    // --- 2. LOGOUT LOGIC ---
+    // Logout
     const logoutBtn = document.getElementById("logoutBtn");
-    if(logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-            showDialog("Exit", "Logout system?", () => signOut(auth));
+    if(logoutBtn) logoutBtn.addEventListener("click", () => showDialog("Exit", "Logout system?", () => signOut(auth)));
+
+    // Modals
+    const openRenameBtn = document.getElementById("openRenameBtn");
+    if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
+    
+    const openTimerBtn = document.getElementById("openTimerModalBtn");
+    if(openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
+
+    document.querySelectorAll(".close-icon").forEach(icon => {
+        icon.addEventListener("click", function() {
+            this.closest(".modal-overlay").classList.remove("active");
+        });
+    });
+
+    // Theme
+    const themeToggle = document.getElementById("themeToggle");
+    if(themeToggle) {
+        if(localStorage.getItem("theme") === "light") { document.body.classList.add("light-mode"); themeToggle.checked = false; }
+        else { themeToggle.checked = true; }
+        themeToggle.addEventListener("change", () => {
+            if(!themeToggle.checked) { document.body.classList.add("light-mode"); localStorage.setItem("theme", "light"); }
+            else { document.body.classList.remove("light-mode"); localStorage.setItem("theme", "dark"); }
         });
     }
 
-    // --- 3. MASTER BUTTON ---
+    // Master
     const masterBtn = document.getElementById("masterBtn");
     if(masterBtn) {
         masterBtn.addEventListener("click", () => {
@@ -98,64 +124,33 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- 4. MODALS & THEME ---
-    const openRenameBtn = document.getElementById("openRenameBtn");
-    if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
-    
-    const openTimerBtn = document.getElementById("openTimerModalBtn");
-    if(openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
-
-    document.querySelectorAll(".close-icon").forEach(icon => {
-        icon.addEventListener("click", function() {
-            this.closest(".modal-overlay").classList.remove("active");
-        });
-    });
-
-    const themeToggle = document.getElementById("themeToggle");
-    if(themeToggle) {
-        if(localStorage.getItem("theme") === "light") { document.body.classList.add("light-mode"); themeToggle.checked = false; }
-        else { themeToggle.checked = true; }
-        themeToggle.addEventListener("change", () => {
-            if(!themeToggle.checked) { document.body.classList.add("light-mode"); localStorage.setItem("theme", "light"); }
-            else { document.body.classList.remove("light-mode"); localStorage.setItem("theme", "dark"); }
-        });
-    }
-
     populateTimeSelects();
 });
 
-// ==================================================
-// AUTH STATE OBSERVER (অটোমেটিক পেজ চেঞ্জ)
-// ==================================================
-onAuthStateChanged(auth, (user) => {
-    const authBox = document.getElementById("authBox");
-    const mainContent = document.getElementById("mainContent");
-    const bottomNav = document.getElementById("bottomNav");
-    const badge = document.getElementById("statusBadge");
+// Navigation
+window.switchTab = function(tabName) {
+    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
+    document.getElementById(tabName + 'Page').classList.add('active-page');
+    const radio = document.getElementById('tab-' + tabName);
+    if(radio) radio.checked = true;
+};
 
+// Auth State
+onAuthStateChanged(auth, (user) => {
     if (user) {
-        // লগইন সফল
-        authBox.style.display = "none";
-        mainContent.style.display = "block";
-        bottomNav.style.display = "flex";
-        badge.textContent = "Connecting...";
-        
-        window.switchTab('home');
-        startListeners();
+        document.getElementById("authBox").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        document.getElementById("bottomNav").style.display = "flex";
+        document.getElementById("statusBadge").textContent = "Connecting...";
+        switchTab('home'); startListeners();
     } else {
-        // লগআউট
-        authBox.style.display = "flex";
-        mainContent.style.display = "none";
-        bottomNav.style.display = "none";
-        // মেসেজ ক্লিয়ার
-        const msg = document.getElementById("authMsg");
-        if(msg) msg.textContent = "";
+        document.getElementById("authBox").style.display = "flex";
+        document.getElementById("mainContent").style.display = "none";
+        document.getElementById("bottomNav").style.display = "none";
     }
 });
 
-// ==================================================
-// FIREBASE LISTENERS
-// ==================================================
+// Firebase Listeners
 function startListeners() {
     onValue(ref(db, "/lastSeen"), () => {
         lastSeenTime = Date.now();
@@ -163,7 +158,7 @@ function startListeners() {
         document.getElementById("statusBadge").textContent = "Online";
     });
     setInterval(() => {
-        if(Date.now() - lastSeenTime > 15000) {
+        if (Date.now() - lastSeenTime > 15000) {
             document.getElementById("statusBadge").className = "status-badge offline";
             document.getElementById("statusBadge").textContent = "Offline";
         }
@@ -210,17 +205,7 @@ function updateMasterButtonUI() {
     document.getElementById("masterStatus").textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
-// ==================================================
-// UTILS & HELPERS
-// ==================================================
-window.switchTab = function(tabName) {
-    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
-    const target = document.getElementById(tabName + 'Page');
-    if(target) target.classList.add('active-page');
-    const radio = document.getElementById('tab-' + tabName);
-    if(radio) radio.checked = true;
-};
-
+// Utils
 window.openSelection = function(type) {
     const modal = document.getElementById("selectionModal");
     const container = document.getElementById("selectionListContainer");
@@ -230,6 +215,9 @@ window.openSelection = function(type) {
     let options = [];
     if(type === 'device') options = deviceNames.map((n, i) => ({ val: (i+1).toString(), text: n }));
     else if(type === 'action') options = [{val: "On", text: "Turn ON"}, {val: "Off", text: "Turn OFF"}];
+    else if(type === 'hour') for(let i=1; i<=12; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
+    else if(type === 'minute') for(let i=0; i<60; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
+    else if(type === 'ampm') options = [{val: "AM", text: "AM"}, {val: "PM", text: "PM"}];
 
     options.forEach(opt => {
         const div = document.createElement("div");
@@ -240,6 +228,9 @@ window.openSelection = function(type) {
             tempSelection[type] = opt.val;
             if(type === 'device') document.getElementById("displayDevice").textContent = opt.text;
             else if(type === 'action') document.getElementById("displayAction").textContent = opt.text;
+            else if(type === 'hour') document.getElementById("displayHour").textContent = opt.text;
+            else if(type === 'minute') document.getElementById("displayMinute").textContent = opt.text;
+            else if(type === 'ampm') document.getElementById("displayAmPm").textContent = opt.text;
             modal.classList.remove("active");
         };
         container.appendChild(div);
@@ -249,11 +240,14 @@ window.openSelection = function(type) {
 window.addNewSchedule = function() {
     let d = tempSelection.device;
     let a = tempSelection.action;
-    let t = document.getElementById("schedTimeInput").value; 
-    if(!t) { alert("Please select time"); return; }
+    let h = parseInt(tempSelection.hour);
+    let m = tempSelection.minute;
+    let ap = tempSelection.ampm;
+    if(ap === "PM" && h < 12) h += 12; if(ap === "AM" && h === 12) h = 0;
+    let t = (h<10?"0"+h:h) + ":" + m;
     set(ref(db, "/time"+a+d), t).then(() => {
         document.getElementById("timerModal").classList.remove("active");
-        alert("Timer Set Successfully!");
+        alert("Timer Set!");
     });
 };
 
@@ -264,11 +258,12 @@ window.saveNameManually = function(id) {
 
 window.closeModal = function(id) { document.getElementById(id).classList.remove("active"); };
 
-function populateTimeSelects() { /* Handled by native input */ }
-function updateDropdown() { /* Handled by custom list */ }
+function populateTimeSelects() { /* handled by custom div */ }
+function updateDropdown() { /* handled by custom list */ }
 
 function renderList() {
-    const c = document.getElementById("scheduleListContainer"); c.innerHTML = "";
+    const c = document.getElementById("scheduleListContainer"); if(!c) return;
+    c.innerHTML = "";
     for(let i=1; i<=6; i++) {
         let n = deviceNames[i-1] || "SW "+i;
         if(activeTimers["timeOn"+i]) addItem(c, i, "On", activeTimers["timeOn"+i], n);
