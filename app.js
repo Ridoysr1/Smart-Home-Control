@@ -17,98 +17,146 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
+// Global Variables
 let deviceNames = ["SW 1", "SW 2", "SW 3", "SW 4", "SW 5", "SW 6"];
 let activeTimers = {};
 let lastSeenTime = 0;
 let tempSelection = { device: "1", action: "On", hour: "12", minute: "00", ampm: "AM" };
 
-document.addEventListener("DOMContentLoaded", () => {
-    // LOGIN
-    const loginBtn = document.getElementById("loginBtn");
-    if(loginBtn) {
-        loginBtn.addEventListener("click", async () => {
-            const email = document.getElementById("emailField").value;
-            const pass = document.getElementById("passwordField").value;
-            try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { alert(e.message); }
-        });
-    }
+// === UI REFS ===
+const ui = {
+    authBox: document.getElementById("authBox"),
+    mainContent: document.getElementById("mainContent"),
+    bottomNav: document.getElementById("bottomNav"),
+    statusBadge: document.getElementById("statusBadge"),
+    authMsg: document.getElementById("authMsg")
+};
 
-    // LOGOUT
-    const logoutBtn = document.getElementById("logoutBtn");
-    if(logoutBtn) logoutBtn.addEventListener("click", () => showDialog("Exit", "Logout system?", () => signOut(auth)));
+// === 1. LOGIN LOGIC (Fixed) ===
+// সরাসরি ইভেন্ট লিসেনার যোগ করা হলো (DOMContentLoaded বাদ দিয়ে)
+const loginBtn = document.getElementById("loginBtn");
+if (loginBtn) {
+    loginBtn.addEventListener("click", () => {
+        const email = document.getElementById("emailField").value;
+        const pass = document.getElementById("passwordField").value;
+        const msg = document.getElementById("authMsg");
 
-    // MODALS
-    const openRenameBtn = document.getElementById("openRenameBtn");
-    if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
-    
-    const openTimerBtn = document.getElementById("openTimerModalBtn");
-    if(openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
+        msg.textContent = "Checking...";
+        msg.style.color = "#4fc3f7";
 
-    document.querySelectorAll(".close-icon").forEach(icon => {
-        icon.addEventListener("click", function() {
-            this.closest(".modal-overlay").classList.remove("active");
-        });
-    });
-
-    // THEME
-    const themeToggle = document.getElementById("themeToggle");
-    if(themeToggle) {
-        if(localStorage.getItem("theme") === "light") { document.body.classList.add("light-mode"); themeToggle.checked = false; }
-        else { themeToggle.checked = true; }
-        themeToggle.addEventListener("change", () => {
-            if(!themeToggle.checked) { document.body.classList.add("light-mode"); localStorage.setItem("theme", "light"); }
-            else { document.body.classList.remove("light-mode"); localStorage.setItem("theme", "dark"); }
-        });
-    }
-
-    // MASTER BUTTON
-    const masterBtn = document.getElementById("masterBtn");
-    if(masterBtn) {
-        masterBtn.addEventListener("click", () => {
-            let anyOn = false;
-            for(let i=1; i<=6; i++) {
-                const btn = document.getElementById("gpio" + i + "Btn");
-                if(btn && btn.classList.contains("on")) { anyOn = true; break; }
-            }
-            const action = anyOn ? "Turn OFF" : "Turn ON";
-            const val = anyOn ? 0 : 1;
-            showDialog("Master Control", `${action} All Switches?`, () => {
-                for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), val);
+        signInWithEmailAndPassword(auth, email, pass)
+            .then(() => {
+                msg.textContent = "Success!";
+                msg.style.color = "#00e676";
+            })
+            .catch((e) => {
+                console.error(e);
+                msg.style.color = "#ff1744";
+                if(e.code === 'auth/invalid-email') msg.textContent = "Invalid Email";
+                else if(e.code === 'auth/user-not-found') msg.textContent = "User Not Found";
+                else if(e.code === 'auth/wrong-password') msg.textContent = "Wrong Password";
+                else msg.textContent = "Login Failed";
             });
-        });
+    });
+}
+
+// === 2. LOGOUT LOGIC ===
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+        showDialog("Exit", "Logout system?", () => signOut(auth));
+    });
+}
+
+// === 3. AUTH STATE OBSERVER ===
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        document.getElementById("authBox").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        document.getElementById("bottomNav").style.display = "flex";
+        document.getElementById("statusBadge").textContent = "Connecting...";
+        
+        // Load Data
+        window.switchTab('home');
+        startListeners();
+    } else {
+        document.getElementById("authBox").style.display = "flex";
+        document.getElementById("mainContent").style.display = "none";
+        document.getElementById("bottomNav").style.display = "none";
+        if(ui.authMsg) ui.authMsg.textContent = "";
     }
 });
 
-// POPUP LIST LOGIC
+// === 4. MASTER BUTTON ===
+const masterBtn = document.getElementById("masterBtn");
+if(masterBtn) {
+    masterBtn.addEventListener("click", () => {
+        let anyOn = false;
+        for(let i=1; i<=6; i++) {
+            const btn = document.getElementById("gpio" + i + "Btn");
+            if(btn && btn.classList.contains("on")) { anyOn = true; break; }
+        }
+        const action = anyOn ? "Turn OFF" : "Turn ON";
+        const val = anyOn ? 0 : 1;
+        showDialog("Master Control", `${action} All Switches?`, () => {
+            for(let i=1; i<=6; i++) set(ref(db, "/gpio" + i), val);
+        });
+    });
+}
+
+// === 5. INITIALIZATIONS ===
+// Theme Check
+const themeToggle = document.getElementById("themeToggle");
+if(themeToggle) {
+    if(localStorage.getItem("theme") === "light") { document.body.classList.add("light-mode"); themeToggle.checked = false; }
+    else { themeToggle.checked = true; }
+    themeToggle.addEventListener("change", () => {
+        if(!themeToggle.checked) { document.body.classList.add("light-mode"); localStorage.setItem("theme", "light"); }
+        else { document.body.classList.remove("light-mode"); localStorage.setItem("theme", "dark"); }
+    });
+}
+
+// Populate Time Arrays
+populateTimeSelects();
+
+// === 6. MODAL TRIGGERS ===
+const openRenameBtn = document.getElementById("openRenameBtn");
+if(openRenameBtn) openRenameBtn.addEventListener("click", () => document.getElementById("renameModal").classList.add("active"));
+
+const openTimerBtn = document.getElementById("openTimerModalBtn");
+if(openTimerBtn) openTimerBtn.addEventListener("click", () => document.getElementById("timerModal").classList.add("active"));
+
+document.querySelectorAll(".close-icon").forEach(icon => {
+    icon.addEventListener("click", function() {
+        this.closest(".modal-overlay").classList.remove("active");
+    });
+});
+
+
+// ================= HELPER FUNCTIONS (GLOBAL) =================
+
+// Navigation
+window.switchTab = function(tabName) {
+    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
+    const target = document.getElementById(tabName + 'Page');
+    if(target) target.classList.add('active-page');
+    const radio = document.getElementById('tab-' + tabName);
+    if(radio) radio.checked = true;
+};
+
+// Popup Selection Logic
 window.openSelection = function(type) {
     const modal = document.getElementById("selectionModal");
-    const title = document.getElementById("selectionTitle");
     const container = document.getElementById("selectionListContainer");
-    
     container.innerHTML = "";
     modal.classList.add("active");
 
     let options = [];
-    if(type === 'device') {
-        title.textContent = "Select Device";
-        options = deviceNames.map((n, i) => ({ val: (i+1).toString(), text: n }));
-    } 
-    else if(type === 'action') {
-        title.textContent = "Select Action";
-        options = [{val: "On", text: "Turn ON"}, {val: "Off", text: "Turn OFF"}];
-    }
-    else if(type === 'hour') {
-        title.textContent = "Select Hour";
-        for(let i=1; i<=12; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
-    }
-    else if(type === 'minute') {
-        title.textContent = "Select Minute";
-        for(let i=0; i<60; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
-    }
-    else if(type === 'ampm') {
-        title.textContent = "Select AM/PM";
-        options = [{val: "AM", text: "AM"}, {val: "PM", text: "PM"}];
-    }
+    if(type === 'device') options = deviceNames.map((n, i) => ({ val: (i+1).toString(), text: n }));
+    else if(type === 'action') options = [{val: "On", text: "Turn ON"}, {val: "Off", text: "Turn OFF"}];
+    else if(type === 'hour') for(let i=1; i<=12; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
+    else if(type === 'minute') for(let i=0; i<60; i++) options.push({val: (i<10?"0"+i:i).toString(), text: (i<10?"0"+i:i).toString()});
+    else if(type === 'ampm') options = [{val: "AM", text: "AM"}, {val: "PM", text: "PM"}];
 
     options.forEach(opt => {
         const div = document.createElement("div");
@@ -117,13 +165,11 @@ window.openSelection = function(type) {
         div.textContent = opt.text;
         div.onclick = () => {
             tempSelection[type] = opt.val;
-            
             if(type === 'device') document.getElementById("displayDevice").textContent = opt.text;
             else if(type === 'action') document.getElementById("displayAction").textContent = opt.text;
             else if(type === 'hour') document.getElementById("displayHour").textContent = opt.text;
             else if(type === 'minute') document.getElementById("displayMinute").textContent = opt.text;
             else if(type === 'ampm') document.getElementById("displayAmPm").textContent = opt.text;
-            
             modal.classList.remove("active");
         };
         container.appendChild(div);
@@ -143,25 +189,18 @@ window.addNewSchedule = function() {
     let t = (h<10?"0"+h:h) + ":" + m;
     set(ref(db, "/time"+a+d), t).then(() => {
         document.getElementById("timerModal").classList.remove("active");
-        alert("Timer Set Successfully!");
+        alert("Timer Set!");
     });
 };
 
-// SHARED LOGIC
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        document.getElementById("authBox").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        document.getElementById("bottomNav").style.display = "flex";
-        document.getElementById("statusBadge").textContent = "Connecting...";
-        switchTab('home'); startListeners();
-    } else {
-        document.getElementById("authBox").style.display = "flex";
-        document.getElementById("mainContent").style.display = "none";
-        document.getElementById("bottomNav").style.display = "none";
-    }
-});
+window.saveNameManually = function(id) {
+    const val = document.getElementById("rename" + id).value;
+    if(val) set(ref(db, "/label" + id), val);
+};
 
+window.closeModal = function(id) { document.getElementById(id).classList.remove("active"); };
+
+// Listeners
 function startListeners() {
     onValue(ref(db, "/lastSeen"), () => {
         lastSeenTime = Date.now();
@@ -216,18 +255,13 @@ function updateMasterButtonUI() {
     document.getElementById("masterStatus").textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
-window.switchTab = function(tabName) {
-    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
-    document.getElementById(tabName + 'Page').classList.add('active-page');
-    document.getElementById('tab-' + tabName).checked = true;
-};
+function populateTimeSelects() {
+    // Only internal logic needed, HTML is divs now
+}
 
-window.closeModal = function(id) { document.getElementById(id).classList.remove("active"); };
-
-window.saveNameManually = function(id) {
-    const val = document.getElementById("rename" + id).value;
-    if(val) set(ref(db, "/label" + id), val);
-};
+function updateDropdown() {
+    // No dropdown to update, custom div handles it
+}
 
 function renderList() {
     const c = document.getElementById("scheduleListContainer"); c.innerHTML = "";
@@ -256,6 +290,7 @@ function addItem(c, i, act, time, name) {
 
 window.delT = (i, a) => { if(confirm("Delete timer?")) set(ref(db, "/time"+a+i), ""); };
 
+// Modal
 const modal = document.getElementById("customModal");
 let onConfirm = null;
 function showDialog(t, m, cb) { 
