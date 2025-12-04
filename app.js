@@ -68,21 +68,29 @@ if (logoutBtn) {
     });
 }
 
-// Master Button
+// Master Button (FIXED LOGIC)
 const masterBtn = document.getElementById("masterBtn");
 if (masterBtn) {
     masterBtn.addEventListener("click", () => {
         let anyOn = false;
+        // Checkboxes চেক করা হচ্ছে
         for (let i = 1; i <= 6; i++) {
             const chk = document.getElementById("gpio" + i);
-            if (chk && chk.checked) { anyOn = true; break; }
+            if (chk && chk.checked) { 
+                anyOn = true; 
+                break; 
+            }
         }
         
-        const action = anyOn ? "Turn OFF" : "Turn ON";
-        const val = anyOn ? 0 : 1;
+        // যদি অন্তত একটি অন থাকে, তাহলে সব অফ করবে (0)। নাহলে সব অন করবে (1)।
+        const actionText = anyOn ? "Turn OFF" : "Turn ON";
+        const newVal = anyOn ? 0 : 1;
         
-        showDialog("Master Control", `${action} All Switches?`, () => {
-            for (let i = 1; i <= 6; i++) set(ref(db, "/gpio" + i), val);
+        showDialog("Master Control", `${actionText} All Switches?`, () => {
+            // Firebase এ সবগুলোর ভ্যালু আপডেট লুপ
+            for (let i = 1; i <= 6; i++) {
+                set(ref(db, "/gpio" + i), newVal);
+            }
         });
     });
 }
@@ -152,7 +160,7 @@ onAuthStateChanged(auth, (user) => {
 
 
 // ==================================================
-// 3. FIREBASE LISTENERS
+// 3. FIREBASE LISTENERS (MAJOR FIX HERE)
 // ==================================================
 function startListeners() {
     // Heartbeat
@@ -168,19 +176,22 @@ function startListeners() {
         }
     }, 1000);
 
-    // 6 Switch Loop (CHECKBOX LOGIC)
+    // 6 Switch Loop
     for (let i = 1; i <= 6; i++) {
         const idx = i;
         
+        // Switch Value Listener
         onValue(ref(db, "/gpio" + idx), (snap) => {
             const val = snap.val();
             const checkbox = document.getElementById("gpio" + idx);
             if (checkbox) {
-                checkbox.checked = (val === 1);
+                // FIX: Use '==' instead of '===' to handle String "1" vs Number 1
+                checkbox.checked = (val == 1);
             }
             updateMasterButtonUI();
         });
 
+        // Name Listener
         onValue(ref(db, "/label" + idx), (snap) => {
             if (snap.val()) {
                 deviceNames[idx - 1] = snap.val();
@@ -192,15 +203,20 @@ function startListeners() {
             }
         });
         
+        // Timer Listeners
         onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn" + idx] = snap.val(); renderList(); });
         onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff" + idx] = snap.val(); renderList(); });
     }
 
     // Attach Click Listeners to Checkboxes
-    document.querySelectorAll(".gpio-checkbox").forEach((checkbox) => {
+    // FIX: Ensure we only attach valid listeners
+    const checkboxes = document.querySelectorAll(".gpio-checkbox");
+    checkboxes.forEach((checkbox) => {
+        // Remove old listener to prevent duplicates (simple approach: overwrite onclick or just use addEventListener carefully)
+        // Since startListeners runs once on Auth, addEventListener is fine.
         checkbox.addEventListener("change", function() {
-            const key = this.dataset.gpio;
-            const newState = this.checked ? 1 : 0;
+            const key = this.dataset.gpio; // e.g., "gpio1"
+            const newState = this.checked ? 1 : 0; // Checked = 1, Unchecked = 0
             set(ref(db, "/" + key), newState);
         });
     });
@@ -210,9 +226,13 @@ function updateMasterButtonUI() {
     let anyOn = false;
     for (let i = 1; i <= 6; i++) {
         const chk = document.getElementById("gpio" + i);
+        // FIX: Check if element exists before checking property
         if (chk && chk.checked) anyOn = true;
     }
-    document.getElementById("masterStatus").textContent = anyOn ? "ALL OFF" : "ALL ON";
+    const statusText = document.getElementById("masterStatus");
+    if (statusText) {
+        statusText.textContent = anyOn ? "ALL OFF" : "ALL ON";
+    }
 }
 
 
