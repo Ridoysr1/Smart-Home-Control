@@ -348,3 +348,4 @@ function showDialog(t, m, cb) {
 }
 document.getElementById("btnCancel").onclick = () => modal.classList.remove("active");
 document.getElementById("btnConfirm").onclick = () => { if (onConfirm) onConfirm(); modal.classList.remove("active"); };
+
