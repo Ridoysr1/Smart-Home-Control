@@ -68,29 +68,22 @@ if (logoutBtn) {
     });
 }
 
-// Master Button (FIXED LOGIC)
+// Master Button (RESTORED LOGIC)
 const masterBtn = document.getElementById("masterBtn");
 if (masterBtn) {
     masterBtn.addEventListener("click", () => {
         let anyOn = false;
-        // Checkboxes চেক করা হচ্ছে
+        // Check for .on class on buttons (Original Logic)
         for (let i = 1; i <= 6; i++) {
-            const chk = document.getElementById("gpio" + i);
-            if (chk && chk.checked) { 
-                anyOn = true; 
-                break; 
-            }
+            const btn = document.getElementById("gpio" + i + "Btn");
+            if (btn && btn.classList.contains("on")) { anyOn = true; break; }
         }
         
-        // যদি অন্তত একটি অন থাকে, তাহলে সব অফ করবে (0)। নাহলে সব অন করবে (1)।
-        const actionText = anyOn ? "Turn OFF" : "Turn ON";
-        const newVal = anyOn ? 0 : 1;
+        const action = anyOn ? "Turn OFF" : "Turn ON";
+        const val = anyOn ? 0 : 1;
         
-        showDialog("Master Control", `${actionText} All Switches?`, () => {
-            // Firebase এ সবগুলোর ভ্যালু আপডেট লুপ
-            for (let i = 1; i <= 6; i++) {
-                set(ref(db, "/gpio" + i), newVal);
-            }
+        showDialog("Master Control", `${action} All Switches?`, () => {
+            for (let i = 1; i <= 6; i++) set(ref(db, "/gpio" + i), val);
         });
     });
 }
@@ -160,7 +153,7 @@ onAuthStateChanged(auth, (user) => {
 
 
 // ==================================================
-// 3. FIREBASE LISTENERS (MAJOR FIX HERE)
+// 3. FIREBASE LISTENERS (RESTORED BUTTON LOGIC)
 // ==================================================
 function startListeners() {
     // Heartbeat
@@ -180,18 +173,23 @@ function startListeners() {
     for (let i = 1; i <= 6; i++) {
         const idx = i;
         
-        // Switch Value Listener
+        // Switch Logic (Matches Original File)
         onValue(ref(db, "/gpio" + idx), (snap) => {
             const val = snap.val();
-            const checkbox = document.getElementById("gpio" + idx);
-            if (checkbox) {
-                // FIX: Use '==' instead of '===' to handle String "1" vs Number 1
-                checkbox.checked = (val == 1);
+            const btn = document.getElementById("gpio" + idx + "Btn");
+            
+            if (btn) {
+                // '==' handles string "1" vs number 1 issue silently
+                if (val == 1) { 
+                    btn.classList.add("on"); 
+                } else { 
+                    btn.classList.remove("on"); 
+                }
             }
             updateMasterButtonUI();
         });
 
-        // Name Listener
+        // Label Logic
         onValue(ref(db, "/label" + idx), (snap) => {
             if (snap.val()) {
                 deviceNames[idx - 1] = snap.val();
@@ -203,36 +201,30 @@ function startListeners() {
             }
         });
         
-        // Timer Listeners
+        // Timer Logic
         onValue(ref(db, "/timeOn" + idx), (snap) => { activeTimers["timeOn" + idx] = snap.val(); renderList(); });
         onValue(ref(db, "/timeOff" + idx), (snap) => { activeTimers["timeOff" + idx] = snap.val(); renderList(); });
     }
 
-    // Attach Click Listeners to Checkboxes
-    // FIX: Ensure we only attach valid listeners
-    const checkboxes = document.querySelectorAll(".gpio-checkbox");
-    checkboxes.forEach((checkbox) => {
-        // Remove old listener to prevent duplicates (simple approach: overwrite onclick or just use addEventListener carefully)
-        // Since startListeners runs once on Auth, addEventListener is fine.
-        checkbox.addEventListener("change", function() {
-            const key = this.dataset.gpio; // e.g., "gpio1"
-            const newState = this.checked ? 1 : 0; // Checked = 1, Unchecked = 0
+    // Button Click Logic (Matches Original File)
+    // We use .gpio-button selector, but exclude master-style
+    document.querySelectorAll(".gpio-button:not(.master-style)").forEach((btn) => {
+        btn.onclick = () => {
+            const key = btn.dataset.gpio;
+            const newState = btn.classList.contains("on") ? 0 : 1;
             set(ref(db, "/" + key), newState);
-        });
+        };
     });
 }
 
 function updateMasterButtonUI() {
     let anyOn = false;
     for (let i = 1; i <= 6; i++) {
-        const chk = document.getElementById("gpio" + i);
-        // FIX: Check if element exists before checking property
-        if (chk && chk.checked) anyOn = true;
+        const btn = document.getElementById("gpio" + i + "Btn");
+        if (btn && btn.classList.contains("on")) anyOn = true;
     }
-    const statusText = document.getElementById("masterStatus");
-    if (statusText) {
-        statusText.textContent = anyOn ? "ALL OFF" : "ALL ON";
-    }
+    const txt = document.getElementById("masterStatus");
+    if(txt) txt.textContent = anyOn ? "ALL OFF" : "ALL ON";
 }
 
 
